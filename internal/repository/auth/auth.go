@@ -35,9 +35,9 @@ func (r *auth) GetChromeDriver(login string) (selenium.WebDriver, error) {
 
 		chromeCaps := chrome.Capabilities{
 			Args: []string{
-				// "--headless",
-				// "--no-sandbox",
-				// "--disable-dev-shm-usage",
+				"--headless",
+				"--no-sandbox",
+				"--disable-dev-shm-usage",
 				//"--user-agent=" + agent,
 				//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 			},

@@ -3,7 +3,7 @@ module bot
 go 1.22
 
 require (
-	github.com/Newmio/steam_helper v1.0.1
+	github.com/Newmio/steam_helper v1.0.4
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/tebeka/selenium v0.9.9
 )

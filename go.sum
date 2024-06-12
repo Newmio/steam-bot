@@ -13,6 +13,10 @@ github.com/Newmio/steam_helper v1.0.0 h1:agVt5peKOsDmShZUX9nuluGEL90qDypKcqeT4eb
 github.com/Newmio/steam_helper v1.0.0/go.mod h1:MEZDFY42pV0TZJCXSjI2+LYE8sheGxo3d9U5Nz4x7zM=
 github.com/Newmio/steam_helper v1.0.1 h1:DocyVMgGxQa6w4dmnUv5kfcZB/4qgxm+bYKQA5qNa/M=
 github.com/Newmio/steam_helper v1.0.1/go.mod h1:MEZDFY42pV0TZJCXSjI2+LYE8sheGxo3d9U5Nz4x7zM=
+github.com/Newmio/steam_helper v1.0.2 h1:9gKh2fHH8gRC73Xuhye9p7vNHL7H1TmkTmeDg8Gew+E=
+github.com/Newmio/steam_helper v1.0.2/go.mod h1:MEZDFY42pV0TZJCXSjI2+LYE8sheGxo3d9U5Nz4x7zM=
+github.com/Newmio/steam_helper v1.0.4 h1:cY0hZK7MesDQ3nc/tDsw0Vbz/rysnbhF0SS4dVwoB8I=
+github.com/Newmio/steam_helper v1.0.4/go.mod h1:MEZDFY42pV0TZJCXSjI2+LYE8sheGxo3d9U5Nz4x7zM=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/blang/semver v3.5.1+incompatible h1:cQNTCjp13qL8KC3Nbxr/y2Bqb63oX6wdnnjpJbkM4JQ=

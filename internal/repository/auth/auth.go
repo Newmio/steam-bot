@@ -113,7 +113,6 @@ func (r *auth) Login(login string) (entity.AuthInfo, error) {
 	if err != nil {
 		return authInfo, steam_helper.Trace(err)
 	}
-	defer wb.Quit()
 
 	if err := wb.Get("https://steamcommunity.com/login/home/?goto="); err != nil {
 		return authInfo, steam_helper.Trace(err)

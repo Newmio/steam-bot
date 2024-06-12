@@ -35,9 +35,9 @@ func (r *auth) GetChromeDriver(login string) (selenium.WebDriver, error) {
 
 		chromeCaps := chrome.Capabilities{
 			Args: []string{
-				"--headless",
-				"--no-sandbox",
-				"--disable-dev-shm-usage",
+				// "--headless",
+				// "--no-sandbox",
+				// "--disable-dev-shm-usage",
 				//"--user-agent=" + agent,
 				//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 			},
@@ -66,7 +66,41 @@ func (r *auth) GetChromeDriver(login string) (selenium.WebDriver, error) {
 	return r.wb[login], nil
 }
 
+func (r *auth) test(login string) {
+	wb, err := r.GetChromeDriver(login)
+	if err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	if err := wb.Get("https://ru.wikipedia.org/wiki/Заглавная_страница"); err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	btns, err := wb.FindElements(selenium.ByCSSSelector, ".main-wikimedia-listItem")
+	if err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	btnLocation, err := btns[0].Location()
+	if err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	if err := steam_helper.MoveMouse(wb, 0, 0, btnLocation.X, btnLocation.Y); err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	if err := btns[0].Click(); err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+}
+
 func (r *auth) Login(login string) (entity.AuthInfo, error) {
+
+	// r.test(login)
+
+	// return entity.AuthInfo{}, nil
+
 	var authInfo entity.AuthInfo
 	accounts := r.accounts[login]
 	acc := accounts[rand.Intn(len(accounts))]
@@ -75,13 +109,20 @@ func (r *auth) Login(login string) (entity.AuthInfo, error) {
 	if err != nil {
 		return authInfo, steam_helper.Trace(err)
 	}
-	//defer wb.Quit()
+	defer wb.Quit()
 
 	if err := wb.Get("https://steamcommunity.com/login/home/?goto="); err != nil {
 		return authInfo, steam_helper.Trace(err)
 	}
 
 	steam_helper.SleepRandom(4000, 5000)
+
+	html, err := wb.PageSource()
+	if err != nil {
+		return authInfo, steam_helper.Trace(err)
+	}
+
+	return authInfo, fmt.Errorf(html)
 
 	inputs, err := wb.FindElements(selenium.ByCSSSelector, "._2eKVn6g5Yysx9JmutQe7WV")
 	if err != nil {

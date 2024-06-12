@@ -24,7 +24,7 @@ func (h *Handler) Login(c echo.Context) error {
 
 	_, err := h.s.Login(login)
 	if err != nil {
-		return c.JSON(500, steam_helper.Trace(err).Error())
+		return c.HTML(500, steam_helper.Trace(err).Error())
 	}
 
 	return c.JSON(200, "ok")

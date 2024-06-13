@@ -20,10 +20,8 @@ func (h *Handler) InitRoutes(e *echo.Echo) {
 }
 
 func (h *Handler) Login(c echo.Context) error {
-	login := "jasgt26800"
-
-	_, err := h.s.Login(login)
-	if err != nil {
+	
+	if err := h.s.SteamAuth(c.QueryParam("login")); err != nil {
 		return c.HTML(500, steam_helper.Trace(err).Error())
 	}
 

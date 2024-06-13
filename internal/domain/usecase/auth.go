@@ -1,22 +1,21 @@
 package usecase
 
 import (
-	"bot/internal/domain/entity"
-	repoauth "bot/internal/repository/auth"
+	reposelenium "bot/internal/repository/selenium"
 )
 
 type IAuth interface {
-	Login(login string) (entity.AuthInfo, error)
+	SteamAuth(login string) error
 }
 
 type auth struct {
-	r repoauth.IAuth
+	r reposelenium.ISelenium
 }
 
-func NewAuth(r repoauth.IAuth) IAuth {
+func NewAuth(r reposelenium.ISelenium) IAuth {
 	return &auth{r: r}
 }
 
-func (u *auth) Login(login string) (entity.AuthInfo, error) {
-	return u.r.Login(login)
+func (u *auth) SteamAuth(login string) error {
+	return u.r.SteamLogin(login)
 }

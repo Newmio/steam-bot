@@ -13,16 +13,21 @@ import (
 
 type ISelenium interface {
 	SteamLogin(login string) error
+	GetCSGOStats(wd selenium.WebDriver, ch chan entity.SteamSkin) error
 }
 
 type seleniumRepo struct {
 	wd       map[string]selenium.WebDriver
 	accounts map[string][]entity.ProxyAccount
-	auth     reposteam.IAuth
+	steam    reposteam.ISteam
 }
 
 func NewSelenium(accounts map[string][]entity.ProxyAccount) ISelenium {
-	return &seleniumRepo{accounts: accounts, auth: reposteam.NewAuth()}
+	return &seleniumRepo{accounts: accounts, steam: reposteam.NewSteam()}
+}
+
+func (r *seleniumRepo) GetCSGOStats(wd selenium.WebDriver, ch chan entity.SteamSkin) error {
+	return r.steam.GetCSGOStats(wd, ch)
 }
 
 func (r *seleniumRepo) SteamLogin(login string) error {
@@ -31,7 +36,12 @@ func (r *seleniumRepo) SteamLogin(login string) error {
 		return steam_helper.Trace(err)
 	}
 
-	return r.auth.Login(wd, r.getSteamUser(login))
+	_, err = r.steam.Login(wd, r.getSteamUser(login))
+	if err != nil {
+		return steam_helper.Trace(err)
+	}
+
+	return nil
 }
 
 func (r *seleniumRepo) getSteamUser(login string) entity.User {

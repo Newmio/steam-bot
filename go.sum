@@ -19,6 +19,8 @@ github.com/Newmio/steam_helper v1.0.4 h1:cY0hZK7MesDQ3nc/tDsw0Vbz/rysnbhF0SS4dVw
 github.com/Newmio/steam_helper v1.0.4/go.mod h1:MEZDFY42pV0TZJCXSjI2+LYE8sheGxo3d9U5Nz4x7zM=
 github.com/Newmio/steam_helper v1.0.5 h1:tDHN1TJE6g9qcM+XzD0pbn65CIng8t87QRtN8kmW1yY=
 github.com/Newmio/steam_helper v1.0.5/go.mod h1:MEZDFY42pV0TZJCXSjI2+LYE8sheGxo3d9U5Nz4x7zM=
+github.com/Newmio/steam_helper v1.0.7 h1:xJBaW3iASYfsqhxKbLbfI/mD/pM/PmqHeFqczx5tfzU=
+github.com/Newmio/steam_helper v1.0.7/go.mod h1:MEZDFY42pV0TZJCXSjI2+LYE8sheGxo3d9U5Nz4x7zM=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/blang/semver v3.5.1+incompatible h1:cQNTCjp13qL8KC3Nbxr/y2Bqb63oX6wdnnjpJbkM4JQ=

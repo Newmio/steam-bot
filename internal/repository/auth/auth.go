@@ -166,13 +166,6 @@ func (r *auth) Login(login string) (entity.AuthInfo, error) {
 
 	steam_helper.SleepRandom(4000, 5000)
 
-	html, err := wb.PageSource()
-	if err != nil {
-		return authInfo, steam_helper.Trace(err)
-	}
-
-	return authInfo, fmt.Errorf(html)
-
 	profile, err := wb.FindElement(selenium.ByCSSSelector, ".user_avatar.playerAvatar.offline")
 	if err != nil {
 		return authInfo, steam_helper.Trace(err)

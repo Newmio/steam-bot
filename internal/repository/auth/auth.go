@@ -40,6 +40,7 @@ func (r *auth) GetChromeDriver(login string) (selenium.WebDriver, error) {
 				"--disable-dev-shm-usage",
 				//"--user-agent=" + agent,
 				//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
+				"--window-size=1920,1080",
 			},
 
 			// Prefs: map[string]interface{}{

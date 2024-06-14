@@ -42,7 +42,7 @@ import (
 // 	}
 // }
 
-func (r *steam) Login(wd selenium.WebDriver, user entity.User) (string, error) {
+func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, error) {
 	haveCookie := true
 
 	if err := wd.Get("https://steamcommunity.com/login/home/?goto="); err != nil {

@@ -2,7 +2,6 @@ package reposelenium
 
 import (
 	"bot/internal/domain/entity"
-	"fmt"
 
 	reposteam "bot/internal/repository/selenium/steam"
 
@@ -12,31 +11,35 @@ import (
 )
 
 type ISelenium interface {
-	SteamLogin(login string) error
-	GetCSGOStats(wd selenium.WebDriver, ch chan entity.SteamSkin) error
+	SteamLogin(user entity.SteamUser) error
+	GetCSGOSkins(login string, ch chan []entity.SteamSkin) error
 }
 
 type seleniumRepo struct {
-	wd       map[string]selenium.WebDriver
-	accounts map[string][]entity.ProxyAccount
-	steam    reposteam.ISteam
+	wd    map[string]selenium.WebDriver
+	steam reposteam.ISteam
 }
 
-func NewSelenium(accounts map[string][]entity.ProxyAccount) ISelenium {
-	return &seleniumRepo{accounts: accounts, steam: reposteam.NewSteam()}
+func NewSelenium() ISelenium {
+	return &seleniumRepo{steam: reposteam.NewSteam()}
 }
 
-func (r *seleniumRepo) GetCSGOStats(wd selenium.WebDriver, ch chan entity.SteamSkin) error {
-	return r.steam.GetCSGOStats(wd, ch)
-}
-
-func (r *seleniumRepo) SteamLogin(login string) error {
+func (r *seleniumRepo) GetCSGOSkins(login string, ch chan []entity.SteamSkin) error {
 	wd, err := r.getChromeDriver(login)
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
 
-	_, err = r.steam.Login(wd, r.getSteamUser(login))
+	return r.steam.GetCSGOSkins(wd, ch)
+}
+
+func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
+	wd, err := r.getChromeDriver(user.Login)
+	if err != nil {
+		return steam_helper.Trace(err)
+	}
+
+	_, err = r.steam.Login(wd, user)
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
@@ -44,18 +47,9 @@ func (r *seleniumRepo) SteamLogin(login string) error {
 	return nil
 }
 
-func (r *seleniumRepo) getSteamUser(login string) entity.User {
-	acc := r.accounts[login][0]
-
-	return entity.User{Login: acc.SteamLogin, Password: acc.SteamPassword}
-}
-
 func (r *seleniumRepo) getChromeDriver(login string) (selenium.WebDriver, error) {
-	if len(r.accounts[login]) == 0 {
-		return nil, steam_helper.Trace(fmt.Errorf("no accounts for login %s", login))
-	}
 
-	if r.wd[login] == nil {
+	if wd, ok := r.wd[login]; !ok || wd == nil {
 
 		//proxy := r.accounts[login][rand.Intn(len(r.accounts[login]))]
 		//proxyAddress := fmt.Sprintf("http://%s:%s@%s:%s", proxy.Login, proxy.Password, proxy.Ip, proxy.Port)

@@ -8,10 +8,10 @@ import (
 )
 
 type Handler struct {
-	s usecase.IAuth
+	s usecase.IUseCase
 }
 
-func NewHandler(s usecase.IAuth) *Handler {
+func NewHandler(s usecase.IUseCase) *Handler {
 	return &Handler{s: s}
 }
 
@@ -20,7 +20,6 @@ func (h *Handler) InitRoutes(e *echo.Echo) {
 }
 
 func (h *Handler) Login(c echo.Context) error {
-	
 	if err := h.s.SteamAuth(c.QueryParam("login")); err != nil {
 		return c.HTML(500, steam_helper.Trace(err).Error())
 	}

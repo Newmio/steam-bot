@@ -5,4 +5,5 @@ type SteamSkin struct{
 	RuName string
 	Cost int
 	Count int
+	Link string
 }

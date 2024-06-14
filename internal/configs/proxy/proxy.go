@@ -1,4 +1,4 @@
-package account
+package proxy
 
 import (
 	"bot/internal/domain/entity"
@@ -8,12 +8,12 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-type account struct {
-	Accs []entity.SteamUser `json:"accounts"`
+type proxy struct {
+	Proxy []entity.Proxy `json:"proxy"`
 }
 
-func InitAccounts() []entity.SteamUser {
-	var accounts account
+func InitProxy() []entity.Proxy {
+	var proxy proxy
 
 	file, err := os.Open("internal/configs/account/accounts.json")
 	if err != nil {
@@ -21,9 +21,9 @@ func InitAccounts() []entity.SteamUser {
 	}
 
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&accounts); err != nil {
+	if err := decoder.Decode(&proxy); err != nil {
 		panic(steam_helper.Trace(err))
 	}
 
-	return accounts.Accs
+	return proxy.Proxy
 }

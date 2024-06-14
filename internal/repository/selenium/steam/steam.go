@@ -7,8 +7,8 @@ import (
 )
 
 type ISteam interface {
-	Login(wd selenium.WebDriver, user entity.User) (string, error)
-	GetCSGOStats(wd selenium.WebDriver, ch chan entity.SteamSkin) error
+	Login(wd selenium.WebDriver, user entity.SteamUser) (string, error)
+	GetCSGOSkins(wd selenium.WebDriver, ch chan []entity.SteamSkin) error
 }
 
 type steam struct{}

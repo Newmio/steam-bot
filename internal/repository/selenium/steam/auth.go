@@ -9,39 +9,6 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-// func (r *auth) test(login string) {
-// 	wb, err := r.GetChromeDriver(login)
-// 	if err != nil {
-// 		fmt.Println(steam_helper.Trace(err))
-// 	}
-
-// 	if err := wb.Get("https://ru.wikipedia.org/wiki/Заглавная_страница"); err != nil {
-// 		fmt.Println(steam_helper.Trace(err))
-// 	}
-
-// 	btns, err := wb.FindElements(selenium.ByCSSSelector, ".main-wikimedia-listItem")
-// 	if err != nil {
-// 		fmt.Println(steam_helper.Trace(err))
-// 	}
-
-// 	// if err := steam_helper.MoveMouse(wb, 0, 0, btnLocation.X, btnLocation.Y); err != nil {
-// 	// 	fmt.Println(steam_helper.Trace(err))
-// 	// }
-
-// 	steam_helper.SleepRandom(1000, 2000)
-
-// 	_, err = steam_helper.MoveMouseAndClick(btns[0], steam_helper.Position{X: 0, Y: 0})
-// 	if err != nil {
-// 		fmt.Println(steam_helper.Trace(err))
-// 	}
-
-// 	steam_helper.SleepRandom(1000, 2000)
-
-// 	if err := btns[0].Click(); err != nil {
-// 		fmt.Println(steam_helper.Trace(err))
-// 	}
-// }
-
 func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, error) {
 	haveCookie := true
 

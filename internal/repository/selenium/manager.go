@@ -2,6 +2,7 @@ package reposelenium
 
 import (
 	"bot/internal/domain/entity"
+	"fmt"
 
 	reposteam "bot/internal/repository/selenium/steam"
 
@@ -21,7 +22,7 @@ type seleniumRepo struct {
 }
 
 func NewSelenium() ISelenium {
-	return &seleniumRepo{steam: reposteam.NewSteam()}
+	return &seleniumRepo{steam: reposteam.NewSteam(), wd: make(map[string]selenium.WebDriver)}
 }
 
 func (r *seleniumRepo) GetCSGOSkins(login string, ch chan []entity.SteamSkin) error {
@@ -38,6 +39,10 @@ func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
+
+	r.Test(wd)
+
+	return nil
 
 	_, err = r.steam.Login(wd, user)
 	if err != nil {
@@ -58,9 +63,9 @@ func (r *seleniumRepo) getChromeDriver(login string) (selenium.WebDriver, error)
 
 		chromeCaps := chrome.Capabilities{
 			Args: []string{
-				"--headless",
-				"--no-sandbox",
-				"--disable-dev-shm-usage",
+				// "--headless",
+				// "--no-sandbox",
+				// "--disable-dev-shm-usage",
 				//"--user-agent=" + agent,
 				//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 				"--window-size=1920,1080",
@@ -88,4 +93,34 @@ func (r *seleniumRepo) getChromeDriver(login string) (selenium.WebDriver, error)
 	}
 
 	return r.wd[login], nil
+}
+
+func (r *seleniumRepo) Test(wd selenium.WebDriver) {
+
+	if err := wd.Get("https://learn.javascript.ru/article/mousemove-mouseover-mouseout-mouseenter-mouseleave/mouseoverout/"); err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	btns, err := wd.FindElements(selenium.ByCSSSelector, ".left-eye")
+	if err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	// if err := steam_helper.MoveMouse(wb, 0, 0, btnLocation.X, btnLocation.Y); err != nil {
+	// 	fmt.Println(steam_helper.Trace(err))
+	// }
+
+	steam_helper.SleepRandom(1000, 2000)
+
+	end, err := steam_helper.GetPositionElement(btns[0])
+	if err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	err = steam_helper.MoveMouse(btns[0], 0, 0, end.X, end.Y)
+	if err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	steam_helper.SleepRandom(1000, 2000)
 }

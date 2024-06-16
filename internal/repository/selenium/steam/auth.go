@@ -34,34 +34,34 @@ func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, err
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	start, err := steam_helper.GetRandomStartMousePosition(wd)
+	start, err := steam_helper.GetStartMousePosition(wd)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	end, err := steam_helper.MoveMouseAndWriteText(inputs[0], start, user.Login)
+	end, err := steam_helper.TestMoveMouseAndWriteText(wd, inputs[0], start, user.Login)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
 
 	if haveCookie {
-		end, err = steam_helper.MoveMouseAndClick(cookieMsg, end)
+		end, err = steam_helper.TestMoveMouseAndClick(wd, cookieMsg, end)
 		if err != nil {
 			return "", steam_helper.Trace(err, wd)
 		}
 	}
 
-	end, err = steam_helper.MoveMouseAndWriteText(inputs[1], end, user.Password)
+	end, err = steam_helper.TestMoveMouseAndWriteText(wd, inputs[1], end, user.Password)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	_, err = steam_helper.MoveMouseAndClick(loginBtn, end)
+	_, err = steam_helper.TestMoveMouseAndClick(wd, loginBtn, end)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	steam_helper.SleepRandom(4000, 5000)
+	steam_helper.SleepRandom(5000, 6000)
 
 	profile, err := wd.FindElement(selenium.ByCSSSelector, ".user_avatar.playerAvatar.offline")
 	if err != nil {

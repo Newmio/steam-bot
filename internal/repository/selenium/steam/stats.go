@@ -11,15 +11,13 @@ import (
 )
 
 func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan []entity.SteamSkin) error {
-	page := 1
-
-	if err := wd.Get(fmt.Sprintf("https://steamcommunity.com/market/search?appid=730#p%d_popular_desc", page)); err != nil {
+	if err := wd.Get("https://steamcommunity.com/market/search?appid=730#p1_popular_desc"); err != nil {
 		return steam_helper.Trace(err, wd)
 	}
 
 	steam_helper.SleepRandom(9000, 10000)
 
-	start, err := steam_helper.GetRandomStartMousePosition(wd)
+	start, err := steam_helper.GetStartMousePosition(wd)
 	if err != nil {
 		return steam_helper.Trace(err, wd)
 	}
@@ -34,17 +32,17 @@ func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan []entity.SteamSkin) 
 
 		for _, skin := range skins {
 
-			hashNameElement, err := skin.FindElement(selenium.ByCSSSelector, "market_listing_row.market_recent_listing_row.market_listing_searchresult")
+			hashNameElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_row.market_recent_listing_row.market_listing_searchresult")
 			if err != nil {
 				return steam_helper.Trace(err, skin)
 			}
 
-			hashName, err := hashNameElement.GetAttribute("hash-name")
+			hashName, err := hashNameElement.GetAttribute("data-hash-name")
 			if err != nil {
 				return steam_helper.Trace(err, hashNameElement)
 			}
 
-			ruNameElement, err := skin.FindElement(selenium.ByCSSSelector, "market_listing_item_name")
+			ruNameElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_item_name")
 			if err != nil {
 				return steam_helper.Trace(err, skin)
 			}
@@ -54,30 +52,45 @@ func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan []entity.SteamSkin) 
 				return steam_helper.Trace(err, ruNameElement)
 			}
 
-			costElement, err := skin.FindElement(selenium.ByCSSSelector, "normal_price")
+			costMainElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_table_value.normal_price")
 			if err != nil {
 				return steam_helper.Trace(err, skin)
 			}
+
+			costElement, err := costMainElement.FindElement(selenium.ByCSSSelector, ".normal_price")
+			if err != nil {
+				return steam_helper.Trace(err, costMainElement)
+			}
+
+			fmt.Println("======= 11 =========")
 
 			costStr, err := costElement.GetAttribute("data-price")
 			if err != nil {
 				return steam_helper.Trace(err, costElement)
 			}
 
-			countElement, err := skin.FindElement(selenium.ByCSSSelector, "market_listing_num_listings_qty")
+			fmt.Println("======= 12 =========")
+
+			countElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_num_listings_qty")
 			if err != nil {
 				return steam_helper.Trace(err, skin)
 			}
+
+			fmt.Println("======= 13 =========")
 
 			countStr, err := countElement.Text()
 			if err != nil {
 				return steam_helper.Trace(err, countElement)
 			}
 
-			nextBtn, err := wd.FindElement(selenium.ByCSSSelector, "searchResults_btn_next")
+			fmt.Println("======= 14 =========")
+
+			nextBtn, err := wd.FindElement(selenium.ByCSSSelector, ".pagebtn")
 			if err != nil {
 				return steam_helper.Trace(err, wd)
 			}
+
+			fmt.Println("======= 15 =========")
 
 			end, err := steam_helper.MoveMouseAndClick(nextBtn, start)
 			if err != nil {
@@ -85,25 +98,31 @@ func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan []entity.SteamSkin) 
 			}
 			start = end
 
+			fmt.Println("======= 16 =========")
+
 			cost, err := strconv.Atoi(costStr)
 			if err != nil {
 				return steam_helper.Trace(err)
 			}
+
+			fmt.Println("======= 17 =========")
 
 			count, err := strconv.Atoi(countStr)
 			if err != nil {
 				return steam_helper.Trace(err)
 			}
 
+			fmt.Println("======= 18 =========")
+
 			steamSkins = append(steamSkins, entity.SteamSkin{
 				HashName: hashName,
-				RuName: ruName,
-				Cost: cost,
-				Count: count,
+				RuName:   ruName,
+				Cost:     cost,
+				Count:    count,
 			})
 		}
 
+		fmt.Println("======= 19 =========")
 		ch <- steamSkins
-		page++
 	}
 }

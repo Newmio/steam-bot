@@ -1,6 +1,8 @@
 package main
 
-import "bot/internal/app"
+import (
+	"bot/internal/app"
+)
 
 // chromedriver --port=9515
 

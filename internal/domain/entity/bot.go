@@ -2,7 +2,6 @@ package entity
 
 type Bot struct {
 	SteamUser SteamUser
-	Proxy     []Proxy
 	//Mu          sync.Mutex
 	IsBusy      bool
 	Windows     int
@@ -19,6 +18,7 @@ type Proxy struct {
 }
 
 type SteamUser struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Login    string  `json:"login"`
+	Password string  `json:"password"`
+	Proxy    []Proxy `json:"proxy"`
 }

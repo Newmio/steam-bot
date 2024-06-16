@@ -26,3 +26,5 @@ func (u *useCase) GetSteamCSGOSkins(login string) error {
 func (u *useCase) SteamAuth(login string) error {
 	return u.steam.SteamAuth(u.bot.SteamUser)
 }
+
+//

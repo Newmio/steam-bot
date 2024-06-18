@@ -21,6 +21,8 @@ func Init() {
 	fmt.Println(steamUser)
 	fmt.Println("-------")
 
+	
+
 	seleniumRepo := reposelenium.NewSelenium(steamUser)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo)
 	usecase := usecase.NewUseCase(steamUsecase, entity.Bot{SteamUser: steamUser})

@@ -10,7 +10,7 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan []entity.SteamSkin) error {
+func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan interface{}) error {
 	if err := wd.Get("https://steamcommunity.com/market/search?appid=730#p1_popular_desc"); err != nil {
 		return steam_helper.Trace(err, wd)
 	}

@@ -3,7 +3,6 @@ package reposelenium
 import (
 	"bot/internal/domain/entity"
 	"fmt"
-	"math/rand"
 
 	reposteam "bot/internal/repository/selenium/steam"
 
@@ -14,7 +13,7 @@ import (
 
 type ISelenium interface {
 	SteamLogin(user entity.SteamUser) error
-	GetCSGOSkins(login string, ch chan []entity.SteamSkin) error
+	GetCSGOSkins(login string, ch chan interface{}) error
 }
 
 type seleniumRepo struct {
@@ -27,45 +26,58 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	steam_helper.BuzierOffset = 200
 	steam_helper.BuzierSteps = 30
 
-	proxy := user.Proxy[rand.Intn(len(user.Proxy))]
-	proxyAddress := fmt.Sprintf("http://%s:%s@%s:%s", proxy.Login, proxy.Password, proxy.Ip, proxy.Port)
+	//proxy := user.Proxy[rand.Intn(len(user.Proxy))]
+	//proxyAddress := fmt.Sprintf("http://%s:%s@%s:%s", proxy.Login, proxy.Password, proxy.Ip, proxy.Port)
+	//proxyAddress := "http://yggdjocl:vajq3n53awr1@38.154.227.167:5868"
 	//agent := steam_helper.GetRandomUserAgent()
 	//window := steam_helper.GetRandomWindowSize(agent)
 
-	fmt.Println(proxyAddress)
+	// extensionData, err := io.ReadFile("proxyauth.zip")
+	// if err != nil {
+	// 	log.Fatalf("Ошибка чтения файла расширения: %v", err)
+	// }
 
 	chromeCaps := chrome.Capabilities{
 		Args: []string{
-			// "--disable-webgl",         // Отключение WebGL
-			// "--disable-webrtc",        // Отключение WebRTC
-			// "--disable-notifications", // Отключение уведомлений
-			// "--incognito",             // Режим инкогнито
+			"--disable-webgl",         // Отключение WebGL
+			"--disable-webrtc",        // Отключение WebRTC
+			"--disable-notifications", // Отключение уведомлений
+			"--incognito",             // Режим инкогнито
 			// "--lang=en-US",            // Изменение языка
-			// "--no-sandbox",            // Отключение песочницы
-			// "--disable-dev-shm-usage", // Отключение использования shared memory
-			// "--disable-blink-features=AutomationControlled", // Отключение автоматических контролируемых функций
+			"--no-sandbox",            // Отключение песочницы
+			"--disable-dev-shm-usage", // Отключение использования shared memory
+			"--disable-blink-features=AutomationControlled", // Отключение автоматических контролируемых функций
 			// "--headless",
 			//"--user-agent=" + agent,
 			//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 			"--window-size=1920,1080",
+			"--user-agent=TEST",
+			//"--proxy-server=" + proxyAddress,
 		},
 
-		// Prefs: map[string]interface{}{
-		// 	"proxy": map[string]interface{}{
-		// 		"httpProxy": proxyAddress,
-		// 		"sslProxy":  proxyAddress,
-		// 		"proxyType": "MANUAL",
-		// 	},
-		// },
+		Prefs: map[string]interface{}{
+			"proxy": map[string]interface{}{
+				"mode":          "fixed_servers",
+				"server":        "38.154.227.167:5868",
+				"proxyType":     "MANUAL",
+				"httpProxy":     "38.154.227.167:5868",
+				"sslProxy":      "38.154.227.167:5868",
+				"socksUsername": "yggdjocl",
+				"socksPassword": "vajq3n53awr1",
+				"noProxy":       "",
+				"autodetect":    false,
+				"class":         "org.openqa.selenium.Proxy",
+			},
+
+			"profile.default_content_setting_values.notifications": 0,
+			"profile.default_content_setting_values.images":        0,
+			"profile.managed_default_content_settings.popups":      0,
+		},
+
+		//Extensions: []string{"proxyauth.zip"},
 	}
 
-	// p := selenium.Proxy{
-	// 	Type: selenium.Manual,
-	// 	HTTP: proxyAddress,
-	// 	SSL:  proxyAddress,
-	// }
-
-	caps := selenium.Capabilities{"browserName": "chrome"} //"proxy": p}
+	caps := selenium.Capabilities{"browserName": "chrome"}
 	caps.AddChrome(chromeCaps)
 
 	wd, err := selenium.NewRemote(caps, "http://127.0.0.1:9515")
@@ -80,12 +92,12 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
-func (r *seleniumRepo) GetCSGOSkins(login string, ch chan []entity.SteamSkin) error {
+func (r *seleniumRepo) GetCSGOSkins(login string, ch chan interface{}) error {
 	return r.steam.GetCSGOSkins(r.wd, ch)
 }
 
 func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
-	// r.Test(wd)
+	// r.Test(r.wd)
 
 	// return nil
 
@@ -97,60 +109,9 @@ func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
 	return nil
 }
 
-// func (r *seleniumRepo) getChromeDriver(login string) (selenium.WebDriver, error) {
-
-// 	if wd, ok := r.wd[login]; !ok || wd == nil {
-
-// 		proxy := r.users[login].Proxy[rand.Intn(len(r.users[login].Proxy))]
-// 		proxyAddress := fmt.Sprintf("http://%s:%s@%s:%s", proxy.Login, proxy.Password, proxy.Ip, proxy.Port)
-// 		//agent := steam_helper.GetRandomUserAgent()
-// 		//window := steam_helper.GetRandomWindowSize(agent)
-
-// 		fmt.Println(proxyAddress)
-
-// 		chromeCaps := chrome.Capabilities{
-// 			Args: []string{
-// 				// "--headless",
-// 				// "--no-sandbox",
-// 				// "--disable-dev-shm-usage",
-// 				//"--user-agent=" + agent,
-// 				//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
-// 				"--window-size=1920,1080",
-// 			},
-
-// 			// Prefs: map[string]interface{}{
-// 			// 	"proxy": map[string]interface{}{
-// 			// 		"httpProxy": proxyAddress,
-// 			// 		"sslProxy":  proxyAddress,
-// 			// 		"proxyType": "MANUAL",
-// 			// 	},
-// 			// },
-// 		}
-
-// 		// p := selenium.Proxy{
-// 		// 	Type: selenium.Manual,
-// 		// 	HTTP: proxyAddress,
-// 		// 	SSL:  proxyAddress,
-// 		// }
-
-// 		caps := selenium.Capabilities{"browserName": "chrome"} //"proxy": p}
-// 		caps.AddChrome(chromeCaps)
-
-// 		wd, err := selenium.NewRemote(caps, "http://127.0.0.1:9515")
-// 		if err != nil {
-// 			return nil, steam_helper.Trace(err)
-// 		}
-
-// 		r.wd[login] = wd
-// 		return wd, nil
-// 	}
-
-// 	return r.wd[login], nil
-// }
-
 func (r *seleniumRepo) Test(wd selenium.WebDriver) {
 
-	if err := wd.Get("https://webhook.site/a85394f2-323e-4faa-834c-6ad90cb62754"); err != nil {
+	if err := wd.Get("https://webhook.site/84b33734-6ca5-4133-b18a-7fda14bb1f04"); err != nil {
 		fmt.Println(steam_helper.Trace(err))
 	}
 

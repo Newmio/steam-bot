@@ -2,11 +2,11 @@ package app
 
 import (
 	"bot/internal/configs/bot"
+	"bot/internal/configs/sqlite"
 	"bot/internal/domain/entity"
 	"bot/internal/domain/usecase"
 	usecasesteam "bot/internal/domain/usecase/steam"
 	reposelenium "bot/internal/repository/selenium"
-	"fmt"
 
 	"bot/internal/transport/http"
 
@@ -17,11 +17,10 @@ func Init() {
 	e := echo.New()
 
 	steamUser := bot.Init()
-
-	fmt.Println(steamUser)
-	fmt.Println("-------")
-
-	
+	_, err := sqlite.OpenDb()
+	if err != nil {
+		panic(err)
+	}
 
 	seleniumRepo := reposelenium.NewSelenium(steamUser)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo)

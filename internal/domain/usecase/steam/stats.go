@@ -9,27 +9,21 @@ import (
 )
 
 func (u *steam) GetCSGOSkins(login string) error {
-	ch := make(chan interface{})
+	ch := make(steam_helper.CursorCh[[]entity.SeleniumSteamSkin])
 
 	go u.r.GetCSGOSkins(login, ch)
 
 	for {
-		select {
-		case skins := <-ch:
+		select{
 
-			if skins == nil {
-				return nil
+		case skin := <- ch:
+			if skin.Error != nil{
+				return steam_helper.Trace(skin.Error)
 			}
 
-			switch v := skins.(type) {
-			case []entity.SteamSkin:
-				fmt.Println("======================")
-				fmt.Printf("%+v\n", v)
-				fmt.Println("======================")
-
-			case error:
-				return steam_helper.Trace(v)
-			}
+			if err := u.db.CreateSeleniumSteamSkins(skin.Model); err != nil{
+				return steam_helper.Trace(err)
+			} 
 
 		case <- time.After(5 * time.Minute):
 			return steam_helper.Trace(fmt.Errorf("timeout"))

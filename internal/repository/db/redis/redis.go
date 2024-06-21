@@ -1,8 +1,22 @@
 package reporedis
 
-import "github.com/redis/go-redis/v9"
+import (
+	"bot/internal/domain/entity"
+
+	"github.com/redis/go-redis/v9"
+)
 
 type IRedis interface {
+	CreateSeleniumSteamSkins(skins []entity.SeleniumSteamSkin) error
+	CreateSteamSkins(skins []entity.DbSteamSkins) error
+	CreateStickerSkins(skins []entity.DbSteamSkins) error
+	CreateFloatSkins(skins []entity.DbSteamSkins) error
+	CreatePatternSkins(skins []entity.DbSteamSkins) error
+	GetSeleniumSteamSkins(start, stop int) ([]entity.SeleniumSteamSkin, error)
+	GetSteamSkins(start, stop int) ([]entity.DbSteamSkins, error)
+	GetStickerSkins(start, stop int) ([]entity.DbSteamSkins, error)
+	GetFloatSkins(start, stop int) ([]entity.DbSteamSkins, error)
+	GetPatternSkins(start, stop int) ([]entity.DbSteamSkins, error)
 }
 
 type redisRepo struct {

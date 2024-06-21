@@ -2,6 +2,7 @@ package reposteam
 
 import (
 	"bot/internal/domain/entity"
+	"context"
 	"fmt"
 	"strconv"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan interface{}) error {
+func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
 	if err := wd.Get("https://steamcommunity.com/market/search?appid=730#p1_popular_desc"); err != nil {
 		return steam_helper.Trace(err, wd)
 	}
@@ -23,7 +24,7 @@ func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan interface{}) error {
 	}
 
 	for {
-		var steamSkins []entity.SteamSkin
+		var steamSkins []entity.SeleniumSteamSkin
 
 		skins, err := wd.FindElements(selenium.ByCSSSelector, ".market_listing_row_link")
 		if err != nil {
@@ -114,7 +115,7 @@ func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan interface{}) error {
 
 			fmt.Println("======= 18 =========")
 
-			steamSkins = append(steamSkins, entity.SteamSkin{
+			steamSkins = append(steamSkins, entity.SeleniumSteamSkin{
 				HashName: hashName,
 				RuName:   ruName,
 				Cost:     cost,
@@ -123,6 +124,6 @@ func (r *steam) GetCSGOSkins(wd selenium.WebDriver, ch chan interface{}) error {
 		}
 
 		fmt.Println("======= 19 =========")
-		ch <- steamSkins
+		ch.WriteModel(context.Background(), steamSkins)
 	}
 }

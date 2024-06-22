@@ -103,11 +103,11 @@ func createDriver() (selenium.WebDriver, error) {
 			"--no-sandbox",            // Отключение песочницы
 			"--disable-dev-shm-usage", // Отключение использования shared memory
 			"--disable-blink-features=AutomationControlled", // Отключение автоматических контролируемых функций
-			// "--headless",
+			"--headless",
 			//"--user-agent=" + agent,
 			//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 			"--window-size=1920,1080",
-			"--user-agent=TEST",
+			//"--user-agent=TEST",
 			//"--proxy-server=" + proxyAddress,
 		},
 

@@ -17,7 +17,7 @@ type ISelenium interface {
 }
 
 type seleniumRepo struct {
-	wd    selenium.WebDriver
+	wd    map[string]selenium.WebDriver
 	user  entity.SteamUser
 	steam reposteam.ISteam
 }
@@ -26,6 +26,62 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	steam_helper.BuzierOffset = 200
 	steam_helper.BuzierSteps = 30
 
+	wd, err := createDriver()
+	if err != nil {
+		panic(err)
+	}
+
+	return &seleniumRepo{
+		steam: reposteam.NewSteam(),
+		user:  user,
+		wd:    map[string]selenium.WebDriver{"steam": wd},
+	}
+}
+
+func (r *seleniumRepo) SynchSteamCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
+	return r.steam.SynchCSGOSkins(r.wd["steam"], ch)
+}
+
+func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
+	// r.Test(r.wd)
+
+	// return nil
+
+	_, err := r.steam.Login(r.wd["steam"], user)
+	if err != nil {
+		return steam_helper.Trace(err)
+	}
+
+	return nil
+}
+
+func (r *seleniumRepo) Test(wd selenium.WebDriver) {
+
+	if err := wd.Get("https://webhook.site/84b33734-6ca5-4133-b18a-7fda14bb1f04"); err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+
+	// btns, err := wd.FindElements(selenium.ByCSSSelector, ".left-eye")
+	// if err != nil {
+	// 	fmt.Println(steam_helper.Trace(err))
+	// }
+
+	// steam_helper.SleepRandom(1000, 2000)
+
+	// // start, err := steam_helper.GetStartMousePosition(wd)
+	// // if err != nil {
+	// // 	fmt.Println(steam_helper.Trace(err))
+	// // }
+
+	// _, err = steam_helper.TestMoveMouseAndClick(wd, btns[0], steam_helper.Position{X: 100, Y: 100})
+	// if err != nil {
+	// 	fmt.Println(steam_helper.Trace(err))
+	// }
+
+	// steam_helper.SleepRandom(1000, 2000)
+}
+
+func createDriver() (selenium.WebDriver, error) {
 	//proxy := user.Proxy[rand.Intn(len(user.Proxy))]
 	//proxyAddress := fmt.Sprintf("http://%s:%s@%s:%s", proxy.Login, proxy.Password, proxy.Ip, proxy.Port)
 	//proxyAddress := "http://yggdjocl:vajq3n53awr1@38.154.227.167:5868"
@@ -82,55 +138,8 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 
 	wd, err := selenium.NewRemote(caps, "http://127.0.0.1:9515")
 	if err != nil {
-		panic(err)
+		return nil, steam_helper.Trace(err)
 	}
 
-	return &seleniumRepo{
-		steam: reposteam.NewSteam(),
-		user:  user,
-		wd:    wd,
-	}
-}
-
-func (r *seleniumRepo) SynchSteamCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
-	return r.steam.SynchCSGOSkins(r.wd, ch)
-}
-
-func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
-	// r.Test(r.wd)
-
-	// return nil
-
-	_, err := r.steam.Login(r.wd, user)
-	if err != nil {
-		return steam_helper.Trace(err)
-	}
-
-	return nil
-}
-
-func (r *seleniumRepo) Test(wd selenium.WebDriver) {
-
-	if err := wd.Get("https://webhook.site/84b33734-6ca5-4133-b18a-7fda14bb1f04"); err != nil {
-		fmt.Println(steam_helper.Trace(err))
-	}
-
-	// btns, err := wd.FindElements(selenium.ByCSSSelector, ".left-eye")
-	// if err != nil {
-	// 	fmt.Println(steam_helper.Trace(err))
-	// }
-
-	// steam_helper.SleepRandom(1000, 2000)
-
-	// // start, err := steam_helper.GetStartMousePosition(wd)
-	// // if err != nil {
-	// // 	fmt.Println(steam_helper.Trace(err))
-	// // }
-
-	// _, err = steam_helper.TestMoveMouseAndClick(wd, btns[0], steam_helper.Position{X: 100, Y: 100})
-	// if err != nil {
-	// 	fmt.Println(steam_helper.Trace(err))
-	// }
-
-	// steam_helper.SleepRandom(1000, 2000)
+	return wd, nil
 }

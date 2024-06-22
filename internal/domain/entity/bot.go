@@ -5,18 +5,19 @@ import "time"
 type Bot struct {
 	SteamUser SteamUser `json:"steam_user"`
 	//Mu          sync.Mutex
-	MinSynchCost float32   `json:"min_synch_cost"`
-	MaxSynchCost float32   `json:"max_synch_cost"`
-	Synch        bool      `json:"synch"`
-	SteamTrade   bool      `json:"steam_trade"`
-	DmarketTrade bool      `json:"dmarket_trade"`
-	CsmoneyTrade bool      `json:"csmoney_trade"`
-	StickerTrade bool      `json:"sticker_trade"`
-	FloatTrade   bool      `json:"float_trade"`
-	PatternTrade bool      `json:"pattern_trade"`
-	DateStopBot  time.Time `json:"date_stop_bot"`
-	IsBusy       bool
-	Windows      int
+	MinSynchCost  float32   `json:"min_synch_cost"`
+	MaxSynchCost  float32   `json:"max_synch_cost"`
+	Synch         bool      `json:"synch"`
+	SteamTrade    bool      `json:"steam_trade"`
+	DmarketTrade  bool      `json:"dmarket_trade"`
+	CsmoneyTrade  bool      `json:"csmoney_trade"`
+	StickerTrade  bool      `json:"sticker_trade"`
+	FloatTrade    bool      `json:"float_trade"`
+	PatternTrade  bool      `json:"pattern_trade"`
+	DateStopBot   time.Time `json:"date_stop_bot"`
+	MaxSeleniumWd int       `json:"max_selenium_wd"`
+	IsBusy        bool
+	Windows       int
 }
 
 type Proxy struct {

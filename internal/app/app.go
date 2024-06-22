@@ -10,7 +10,6 @@ import (
 	reporedis "bot/internal/repository/db/redis"
 	reposqlite "bot/internal/repository/db/sqlite"
 	reposelenium "bot/internal/repository/selenium"
-	"fmt"
 
 	"bot/internal/transport/http"
 
@@ -20,9 +19,6 @@ import (
 func Init() {
 	e := echo.New()
 	bot := bot.Init()
-
-	fmt.Println(bot)
-	fmt.Println("======")
 
 	sqlite, err := sqlite.OpenDb()
 	if err != nil {

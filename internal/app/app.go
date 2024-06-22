@@ -2,8 +2,6 @@ package app
 
 import (
 	"bot/internal/configs/bot"
-	"bot/internal/configs/redis"
-	"bot/internal/configs/sqlite"
 	"bot/internal/domain/usecase"
 	usecasesteam "bot/internal/domain/usecase/steam"
 	repodb "bot/internal/repository/db"
@@ -20,19 +18,19 @@ func Init() {
 	e := echo.New()
 	bot := bot.Init()
 
-	sqlite, err := sqlite.OpenDb()
-	if err != nil {
-		panic(err)
-	}
+	// sqlite, err := sqlite.OpenDb()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	redis, err := redis.OpenDb()
-	if err != nil {
-		panic(err)
-	}
+	// redis, err := redis.OpenDb()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	seleniumRepo := reposelenium.NewSelenium(bot.SteamUser)
-	repoRedis := reporedis.NewRedis(redis)
-	repoSqlite := reposqlite.NewSqlite(sqlite)
+	repoRedis := reporedis.NewRedis(nil)
+	repoSqlite := reposqlite.NewSqlite(nil)
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo)
 	usecase := usecase.NewUseCase(steamUsecase, bot)

@@ -11,7 +11,12 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     macchanger \
     e2fsprogs \
-    proxychains4
+    proxychains4 \
+    libnss3 \
+    libxss1 \
+    net-tools \
+    util-linux \
+    netcat
 
 # Устанавливаем Google Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
@@ -45,7 +50,7 @@ COPY . .
 RUN chmod +x /go/src/app/start.sh
 
 # Устанавливаем Selenium и другие пакеты Go
-RUN go get -u github.com/tebeka/selenium
+RUN go mod tidy
 
 # Команда для запуска сценария
 CMD ["/go/src/app/start.sh"]

@@ -98,6 +98,7 @@ func createDriver() (selenium.WebDriver, error) {
 			"--disable-webgl",         // Отключение WebGL
 			"--disable-webrtc",        // Отключение WebRTC
 			"--disable-notifications", // Отключение уведомлений
+			"--disable-rtc-smoothness-algorithm",
 			"--incognito",             // Режим инкогнито
 			// "--lang=en-US",            // Изменение языка
 			"--no-sandbox",            // Отключение песочницы
@@ -133,6 +134,42 @@ func createDriver() (selenium.WebDriver, error) {
 		//Extensions: []string{"proxyauth.zip"},
 	}
 
+	script := `
+    // Функция для генерации случайного целого числа в заданном диапазоне
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Функция для генерации случайного элемента из массива
+    function getRandomArrayElement(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // Рандомизация платформы (операционной системы)
+    const platforms = ['Win32', 'Linux x86_64', 'MacIntel'];
+    Object.defineProperty(navigator, 'platform', {
+        get: function() {
+            return getRandomArrayElement(platforms);
+        }
+    });
+
+    // Рандомизация количества ядер процессора
+    Object.defineProperty(navigator, 'hardwareConcurrency', {
+        get: function() {
+            return getRandomInt(2, 8); // Случайное количество ядер CPU от 2 до 8
+        }
+    });
+
+    // Рандомизация объема памяти
+    Object.defineProperty(navigator, 'deviceMemory', {
+        get: function() {
+            return getRandomInt(4, 16); // Случайное количество памяти от 4 до 16 GB
+        }
+    });
+	`
+
 	caps := selenium.Capabilities{"browserName": "chrome"}
 	caps.AddChrome(chromeCaps)
 
@@ -140,6 +177,11 @@ func createDriver() (selenium.WebDriver, error) {
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
+
+	_, err = wd.ExecuteScript(script, nil)
+    if err != nil {
+        return nil, steam_helper.Trace(err)
+    }
 
 	return wd, nil
 }

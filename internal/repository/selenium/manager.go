@@ -13,7 +13,7 @@ import (
 
 type ISelenium interface {
 	SteamLogin(user entity.SteamUser) error
-	GetCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	SynchSteamCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
 }
 
 type seleniumRepo struct {
@@ -92,8 +92,8 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
-func (r *seleniumRepo) GetCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
-	return r.steam.GetCSGOSkins(r.wd, ch)
+func (r *seleniumRepo) SynchSteamCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
+	return r.steam.SynchCSGOSkins(r.wd, ch)
 }
 
 func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {

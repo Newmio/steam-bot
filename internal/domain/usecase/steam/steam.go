@@ -8,7 +8,7 @@ import (
 
 type ISteam interface {
 	SteamAuth(user entity.SteamUser) error
-	GetCSGOSkins(login string) error
+	SynchSteamCSGOSkins(login string) error
 }
 
 type steam struct {

@@ -7,7 +7,7 @@ import (
 
 type IUseCase interface {
 	SteamAuth(login string) error
-	GetSteamCSGOSkins(login string) error
+	SynchSteamCSGOSkins(login string) error
 }
 
 type useCase struct {
@@ -19,8 +19,11 @@ func NewUseCase(steam usecasesteam.ISteam, bot entity.Bot) IUseCase {
 	return &useCase{bot: bot, steam: steam}
 }
 
-func (u *useCase) GetSteamCSGOSkins(login string) error {
-	return u.steam.GetCSGOSkins(u.bot.SteamUser.Login)
+func (u *useCase) SynchSteamCSGOSkins(login string) error {
+	if !u.bot.CheckAction("synch"){
+		return nil
+	}
+	return u.steam.SynchSteamCSGOSkins(u.bot.SteamUser.Login)
 }
 
 func (u *useCase) SteamAuth(login string) error {

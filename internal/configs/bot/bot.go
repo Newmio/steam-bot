@@ -8,12 +8,8 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-type bot struct{
-	User entity.SteamUser `json:"bot"`
-}
-
-func Init() entity.SteamUser {
-	var bot bot
+func Init() entity.Bot {
+	var bot entity.Bot
 
 	file, err := os.Open("internal/configs/bot/bot.json")
 	if err != nil {
@@ -25,5 +21,5 @@ func Init() entity.SteamUser {
 		panic(steam_helper.Trace(err))
 	}
 
-	return bot.User
+	return bot
 }

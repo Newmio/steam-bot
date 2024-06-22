@@ -8,10 +8,10 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-func (u *steam) GetCSGOSkins(login string) error {
+func (u *steam) SynchSteamCSGOSkins(login string) error {
 	ch := make(steam_helper.CursorCh[[]entity.SeleniumSteamSkin])
 
-	go u.r.GetCSGOSkins(login, ch)
+	go u.r.SynchSteamCSGOSkins(login, ch)
 
 	for {
 		select{

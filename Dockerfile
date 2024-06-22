@@ -41,9 +41,5 @@ COPY . .
 # Устанавливаем Selenium и другие пакеты Go
 RUN go get -u github.com/tebeka/selenium
 
-# Создаем сценарий для запуска chromedriver и приложения на Go
-RUN echo '#!/bin/sh\nchromedriver --port=9515 &\nsleep 5\ngo run cmd/main.go' > /usr/local/bin/start.sh \
-    && chmod +x /usr/local/bin/start.sh
-
 # Команда для запуска сценария
-CMD ["/usr/local/bin/start.sh"]
+CMD ["start.sh"]

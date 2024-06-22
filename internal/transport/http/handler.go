@@ -16,5 +16,12 @@ func NewHandler(s usecase.IUseCase) *Handler {
 
 func (h *Handler) InitRoutes(e *echo.Echo) {
 	e.GET("/login", h.Login)
-	e.GET("/steam_stats", h.SteamStats)
+
+	synch := e.Group("/synch")
+	{
+		csgo := synch.Group("/csgo")
+		{
+			csgo.GET("/steam", h.SynchSteamCSGOSkins)
+		}
+	}
 }

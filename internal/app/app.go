@@ -4,13 +4,13 @@ import (
 	"bot/internal/configs/bot"
 	"bot/internal/configs/redis"
 	"bot/internal/configs/sqlite"
-	"bot/internal/domain/entity"
 	"bot/internal/domain/usecase"
 	usecasesteam "bot/internal/domain/usecase/steam"
 	repodb "bot/internal/repository/db"
 	reporedis "bot/internal/repository/db/redis"
 	reposqlite "bot/internal/repository/db/sqlite"
 	reposelenium "bot/internal/repository/selenium"
+	"fmt"
 
 	"bot/internal/transport/http"
 
@@ -19,7 +19,10 @@ import (
 
 func Init() {
 	e := echo.New()
-	steamUser := bot.Init()
+	bot := bot.Init()
+
+	fmt.Println(bot)
+	fmt.Println("======")
 
 	sqlite, err := sqlite.OpenDb()
 	if err != nil {
@@ -31,12 +34,12 @@ func Init() {
 		panic(err)
 	}
 
-	seleniumRepo := reposelenium.NewSelenium(steamUser)
+	seleniumRepo := reposelenium.NewSelenium(bot.SteamUser)
 	repoRedis := reporedis.NewRedis(redis)
 	repoSqlite := reposqlite.NewSqlite(sqlite)
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo)
-	usecase := usecase.NewUseCase(steamUsecase, entity.Bot{SteamUser: steamUser})
+	usecase := usecase.NewUseCase(steamUsecase, bot)
 	authHandler := http.NewHandler(usecase)
 	authHandler.InitRoutes(e)
 

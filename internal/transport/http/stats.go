@@ -5,9 +5,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (h *Handler) SteamStats(c echo.Context) error {
+func (h *Handler) SynchSteamCSGOSkins(c echo.Context) error {
 
-	if err := h.s.GetSteamCSGOSkins(c.QueryParam("login")); err != nil {
+	if err := h.s.SynchSteamCSGOSkins(c.QueryParam("login")); err != nil {
 		return c.HTML(500, steam_helper.Trace(err).Error())
 	}
 

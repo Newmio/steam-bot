@@ -13,12 +13,10 @@ RUN apt-get update && apt-get install -y \
     e2fsprogs \
     proxychains4 \
     libnss3 \
-    libgconf-2-4 \
     libxss1 \
     libappindicator3-1 \
     libindicator3-7 \
     fonts-liberation \
-    libasound2 \
     xdg-utils
 
 # Устанавливаем Google Chrome

@@ -12,7 +12,11 @@ tune2fs $fs -U random
 serial=$(tr -cd 'a-f0-9' < /dev/urandom | head -c 32)
 echo "Serial Number: $serial" > /etc/serial_number
 
-# Запускаем chromedriver и приложение
-chromedriver --port=9515 &
+# Запускаем chromedriver в фоне
+nohup chromedriver --port=9515 --verbose &
+
+# Ждем 5 секунд, чтобы убедиться, что chromedriver запущен
 sleep 5
+
+# Запускаем Go-приложение
 go run cmd/main.go

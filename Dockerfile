@@ -42,4 +42,4 @@ COPY . .
 RUN go get -u github.com/tebeka/selenium
 
 # Команда для запуска сценария
-CMD ["start.sh"]
+CMD ["/go/src/app/start.sh"]

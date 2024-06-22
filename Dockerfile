@@ -11,13 +11,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     macchanger \
     e2fsprogs \
-    proxychains4 \
-    libnss3 \
-    libxss1 \
-    libappindicator3-1 \
-    libindicator3-7 \
-    fonts-liberation \
-    xdg-utils
+    proxychains4
 
 # Устанавливаем Google Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \

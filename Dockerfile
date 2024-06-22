@@ -41,5 +41,8 @@ COPY . .
 # Устанавливаем Selenium и другие пакеты Go
 RUN go get -u github.com/tebeka/selenium
 
+# Делаем сценарий исполняемым
+RUN chmod +x /go/src/app/start.sh
+
 # Команда для запуска сценария
 CMD ["/go/src/app/start.sh"]

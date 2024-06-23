@@ -44,9 +44,9 @@ func (r *seleniumRepo) SynchSteamCSGOSkins(login string, ch steam_helper.CursorC
 }
 
 func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
-	// r.Test(r.wd["steam"])
+	r.Test(r.wd["steam"])
 
-	// return nil
+	return nil
 
 	_, err := r.steam.Login(r.wd["steam"], user)
 	if err != nil {

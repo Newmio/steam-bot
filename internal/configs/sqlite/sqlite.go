@@ -1,9 +1,11 @@
 package sqlite
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
-func OpenDb() (*sqlx.DB, error) {
-	return sqlx.Open("sqlite3", "./bot.db")
+func OpenDb(dbName string) (*sqlx.DB, error) {
+	return sqlx.Open("sqlite3", fmt.Sprintf("./%s.db", dbName))
 }

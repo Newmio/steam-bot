@@ -9,14 +9,8 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     software-properties-common \
     build-essential \
-    macchanger \
-    e2fsprogs \
-    proxychains4 \
     libnss3 \
-    libxss1 \
-    net-tools \
-    util-linux \
-    netcat
+    libxss1
 
 # Устанавливаем Google Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \

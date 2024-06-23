@@ -30,7 +30,11 @@ func NewDatabase(redis reporedis.IRedis, sqlite reposqlite.ISqlite) IDatabase {
 	return &database{redis: redis, sqlite: sqlite}
 }
 
-func (db *database) CreateSeleniumSteamSkins(skins []entity.SeleniumSteamSkin) error{
+func (db *database) CreateBetweenSkins(skins []entity.DbSteamSkins) error {
+	return db.redis.CreateBetweenSkins(skins)
+}
+
+func (db *database) CreateSeleniumSteamSkins(skins []entity.SeleniumSteamSkin) error {
 	return db.redis.CreateSeleniumSteamSkins(skins)
 }
 
@@ -100,6 +104,19 @@ func (db *database) GetPatternSkins(limit, offset int) ([]entity.DbSteamSkins, e
 	}
 
 	return db.sqlite.GetPatternSkins(limit, offset)
+}
+
+func (db *database) GetBetweenSkins(limit, offset int) ([]entity.DbSteamSkins, error) {
+	skins, err := db.redis.GetBetweenSkins(offset, limit+offset-1)
+	if err != nil {
+		return nil, steam_helper.Trace(err)
+	}
+
+	if len(skins) > 0 {
+		return skins, nil
+	}
+
+	return db.sqlite.GetBetweenSkins(limit, offset)
 }
 
 func (db *database) CreateTables() error {

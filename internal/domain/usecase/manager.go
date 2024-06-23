@@ -20,12 +20,17 @@ func NewUseCase(steam usecasesteam.ISteam, bot entity.Bot) IUseCase {
 }
 
 func (u *useCase) SynchSteamCSGOSkins(login string) error {
-	if !u.bot.CheckAction("synch"){
+	if !u.bot.CheckAction("synch") {
 		return nil
 	}
+	u.bot.IsBusy = true
 	return u.steam.SynchSteamCSGOSkins(u.bot.SteamUser.Login)
 }
 
 func (u *useCase) SteamAuth(login string) error {
+	if !u.bot.CheckAction("") {
+		return nil
+	}
+	u.bot.IsBusy = true
 	return u.steam.SteamAuth(u.bot.SteamUser)
 }

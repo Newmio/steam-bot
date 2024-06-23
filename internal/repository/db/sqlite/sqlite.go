@@ -13,10 +13,12 @@ type ISqlite interface {
 	CreateStickerSkins(skins []entity.DbSteamSkins) error
 	CreateFloatSkins(skins []entity.DbSteamSkins) error
 	CreatePatternSkins(skins []entity.DbSteamSkins) error
+	CreateBetweenSkins(skins []entity.DbSteamSkins) error
 	GetSteamSkins(limit, offset int) ([]entity.DbSteamSkins, error)
 	GetStickerSkins(limit, offset int) ([]entity.DbSteamSkins, error)
 	GetFloatSkins(limit, offset int) ([]entity.DbSteamSkins, error)
 	GetPatternSkins(limit, offset int) ([]entity.DbSteamSkins, error)
+	GetBetweenSkins(limit, offset int) ([]entity.DbSteamSkins, error)
 }
 
 type sqlite struct {
@@ -24,15 +26,21 @@ type sqlite struct {
 }
 
 func NewSqlite(db *sqlx.DB) ISqlite {
-	return &sqlite{db: db}
+	r := &sqlite{db: db}
+
+	if err := r.CreateTables(); err != nil {
+		panic(steam_helper.Trace(err))
+	}
+
+	return r
 }
 
 func (db *sqlite) CreateTables() error {
 	str := `create table if not exists steam_skins(
 		id text primary key,
-		name text,
-		runame text,
-		link text
+		name text default '',
+		runame text default '',
+		link text default ''
 	)`
 
 	if _, err := db.db.Exec(str); err != nil {
@@ -41,9 +49,9 @@ func (db *sqlite) CreateTables() error {
 
 	str = `create table if not exists sticker_skins(
 		id text primary key,
-		name text,
-		runame text,
-		link text
+		name text default '',
+		runame text default '',
+		link text default ''
 	)`
 
 	if _, err := db.db.Exec(str); err != nil {
@@ -52,9 +60,9 @@ func (db *sqlite) CreateTables() error {
 
 	str = `create table if not exists float_skins(
 		id text primary key,
-		name text,
-		runame text,
-		link text
+		name text default '',
+		runame text default '',
+		link text default ''
 	)`
 
 	if _, err := db.db.Exec(str); err != nil {
@@ -63,9 +71,22 @@ func (db *sqlite) CreateTables() error {
 
 	str = `create table if not exists pattern_skins(
 		id text primary key,
-		name text,
-		runame text,
-		link text
+		name text default '',
+		runame text default '',
+		link text default ''
+	)`
+
+	if _, err := db.db.Exec(str); err != nil {
+		return steam_helper.Trace(err)
+	}
+
+	str = `create table if not exists between_skins(
+		id text primary key,
+		csmoney boolean default false,
+		dmarket boolean default false,
+		name text default '',
+		runame text default '',
+		link text default ''
 	)`
 
 	if _, err := db.db.Exec(str); err != nil {

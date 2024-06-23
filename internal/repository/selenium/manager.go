@@ -3,6 +3,7 @@ package reposelenium
 import (
 	"bot/internal/domain/entity"
 	"fmt"
+	"time"
 
 	reposteam "bot/internal/repository/selenium/steam"
 
@@ -43,7 +44,7 @@ func (r *seleniumRepo) SynchSteamCSGOSkins(login string, ch steam_helper.CursorC
 }
 
 func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
-	// r.Test(r.wd)
+	// r.Test(r.wd["steam"])
 
 	// return nil
 
@@ -57,9 +58,11 @@ func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
 
 func (r *seleniumRepo) Test(wd selenium.WebDriver) {
 
-	if err := wd.Get("https://webhook.site/84b33734-6ca5-4133-b18a-7fda14bb1f04"); err != nil {
+	if err := wd.Get("https://webhook.site/701a5ccc-db3d-4f79-a764-49da9674c64d"); err != nil {
 		fmt.Println(steam_helper.Trace(err))
 	}
+
+	time.Sleep(time.Second * 2)
 
 	// btns, err := wd.FindElements(selenium.ByCSSSelector, ".left-eye")
 	// if err != nil {
@@ -82,16 +85,9 @@ func (r *seleniumRepo) Test(wd selenium.WebDriver) {
 }
 
 func createDriver() (selenium.WebDriver, error) {
-	//proxy := user.Proxy[rand.Intn(len(user.Proxy))]
-	//proxyAddress := fmt.Sprintf("http://%s:%s@%s:%s", proxy.Login, proxy.Password, proxy.Ip, proxy.Port)
-	//proxyAddress := "http://yggdjocl:vajq3n53awr1@38.154.227.167:5868"
-	//agent := steam_helper.GetRandomUserAgent()
-	//window := steam_helper.GetRandomWindowSize(agent)
+	agent := steam_helper.GetRandomUserAgent()
+	window := steam_helper.GetRandomWindowSize()
 
-	// extensionData, err := io.ReadFile("proxyauth.zip")
-	// if err != nil {
-	// 	log.Fatalf("Ошибка чтения файла расширения: %v", err)
-	// }
 
 	chromeCaps := chrome.Capabilities{
 		Args: []string{
@@ -99,33 +95,17 @@ func createDriver() (selenium.WebDriver, error) {
 			"--disable-webrtc",        // Отключение WebRTC
 			"--disable-notifications", // Отключение уведомлений
 			"--disable-rtc-smoothness-algorithm",
-			"--incognito",             // Режим инкогнито
-			// "--lang=en-US",            // Изменение языка
+			"--incognito", // Режим инкогнито
+			"--lang=ru",            // Изменение языка
 			"--no-sandbox",            // Отключение песочницы
 			"--disable-dev-shm-usage", // Отключение использования shared memory
 			"--disable-blink-features=AutomationControlled", // Отключение автоматических контролируемых функций
 			"--headless",
-			//"--user-agent=" + agent,
-			//fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
-			"--window-size=1920,1080",
-			//"--user-agent=TEST",
-			//"--proxy-server=" + proxyAddress,
+			"--user-agent=" + agent,
+			fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 		},
 
 		Prefs: map[string]interface{}{
-			"proxy": map[string]interface{}{
-				"mode":          "fixed_servers",
-				"server":        "38.154.227.167:5868",
-				"proxyType":     "MANUAL",
-				"httpProxy":     "38.154.227.167:5868",
-				"sslProxy":      "38.154.227.167:5868",
-				"socksUsername": "yggdjocl",
-				"socksPassword": "vajq3n53awr1",
-				"noProxy":       "",
-				"autodetect":    false,
-				"class":         "org.openqa.selenium.Proxy",
-			},
-
 			"profile.default_content_setting_values.notifications": 0,
 			"profile.default_content_setting_values.images":        0,
 			"profile.managed_default_content_settings.popups":      0,
@@ -179,9 +159,103 @@ func createDriver() (selenium.WebDriver, error) {
 	}
 
 	_, err = wd.ExecuteScript(script, nil)
-    if err != nil {
-        return nil, steam_helper.Trace(err)
-    }
+	if err != nil {
+		return nil, steam_helper.Trace(err)
+	}
 
 	return wd, nil
 }
+
+// func createDriver(user entity.SteamUser) (selenium.WebDriver, error) {
+// 	proxy := user.Proxy[rand.Intn(len(user.Proxy))]
+// 	agent := steam_helper.GetRandomUserAgent()
+// 	window := steam_helper.GetRandomWindowSize()
+
+// 	//host := fmt.Sprintf("http://%s:%s@%s:%s", proxy.Login, proxy.Password, proxy.Ip, proxy.Port)
+
+// 	firefoxPrefs := map[string]interface{}{
+// 		"general.useragent.override": agent,
+// 		// "webgl.disabled":                             true,  // Отключение WebGL
+// 		// "media.peerconnection.enabled":               false, // Отключение WebRTC
+// 		// "dom.webnotifications.enabled":               false, // Отключение уведомлений
+// 		// "media.navigator.video.enabled":              false, // Отключение видео через RTC
+// 		// "media.navigator.audio.enabled":              false, // Отключение аудио через RTC
+// 		// "intl.accept_languages":                      "ru",  // Установка языка интерфейса
+// 		// "dom.webdriver.enabled":                      false, // Отключение свойства `navigator.webdriver`
+// 		// "datareporting.healthreport.uploadEnabled":   false,
+// 		// "datareporting.policy.dataSubmissionEnabled": false,
+// 		// "social.enabled":                             false,
+// 		// "network.prefetch-next":                      false,
+// 		"network.proxy.type":                      1,
+// 		"network.proxy.http":                      proxy.Ip,
+// 		"network.proxy.http_port":                 proxy.Port,
+// 		"network.proxy.ssl":                       proxy.Ip,
+// 		"network.proxy.ssl_port":                  proxy.Port,
+// 		"signon.autologin.proxy":                  true,
+// 		"network.proxy.allow_hijacking_localhost": true,
+// 	}
+
+// 	firefoxArgs := []string{
+// 		//"--private", // Incognito mode
+// 	}
+
+// 	firefoxCaps := firefox.Capabilities{
+// 		Args:  firefoxArgs,
+// 		Prefs: firefoxPrefs,
+// 	}
+
+// 	caps := selenium.Capabilities{"browserName": "firefox"}
+// 	caps.AddFirefox(firefoxCaps)
+
+// 	wd, err := selenium.NewRemote(caps, "http://127.0.0.1:4444")
+// 	if err != nil {
+// 		return nil, steam_helper.Trace(err)
+// 	}
+
+// 	if err := wd.ResizeWindow("", window.Width, window.Height); err != nil {
+// 		return nil, steam_helper.Trace(err)
+// 	}
+
+// 	script := `
+//     // Функция для генерации случайного целого числа в заданном диапазоне
+//     function getRandomInt(min, max) {
+//         min = Math.ceil(min);
+//         max = Math.floor(max);
+//         return Math.floor(Math.random() * (max - min + 1)) + min;
+//     }
+
+//     // Функция для генерации случайного элемента из массива
+//     function getRandomArrayElement(arr) {
+//         return arr[Math.floor(Math.random() * arr.length)];
+//     }
+
+//     // Рандомизация платформы (операционной системы)
+//     const platforms = ['Win32', 'Linux x86_64', 'MacIntel'];
+//     Object.defineProperty(navigator, 'platform', {
+//         get: function() {
+//             return getRandomArrayElement(platforms);
+//         }
+//     });
+
+//     // Рандомизация количества ядер процессора
+//     Object.defineProperty(navigator, 'hardwareConcurrency', {
+//         get: function() {
+//             return getRandomInt(2, 8); // Случайное количество ядер CPU от 2 до 8
+//         }
+//     });
+
+//     // Рандомизация объема памяти
+//     Object.defineProperty(navigator, 'deviceMemory', {
+//         get: function() {
+//             return getRandomInt(4, 16); // Случайное количество памяти от 4 до 16 GB
+//         }
+//     });
+// 	`
+
+// 	_, err = wd.ExecuteScript(script, nil)
+// 	if err != nil {
+// 		return nil, steam_helper.Trace(err)
+// 	}
+
+// 	return wd, nil
+// }

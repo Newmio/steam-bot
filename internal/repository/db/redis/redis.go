@@ -12,11 +12,13 @@ type IRedis interface {
 	CreateStickerSkins(skins []entity.DbSteamSkins) error
 	CreateFloatSkins(skins []entity.DbSteamSkins) error
 	CreatePatternSkins(skins []entity.DbSteamSkins) error
+	CreateBetweenSkins(skins []entity.DbSteamSkins) error
 	GetSeleniumSteamSkins(start, stop int) ([]entity.SeleniumSteamSkin, error)
 	GetSteamSkins(start, stop int) ([]entity.DbSteamSkins, error)
 	GetStickerSkins(start, stop int) ([]entity.DbSteamSkins, error)
 	GetFloatSkins(start, stop int) ([]entity.DbSteamSkins, error)
 	GetPatternSkins(start, stop int) ([]entity.DbSteamSkins, error)
+	GetBetweenSkins(start, stop int) ([]entity.DbSteamSkins, error)
 }
 
 type redisRepo struct {

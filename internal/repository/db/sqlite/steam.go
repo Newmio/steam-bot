@@ -6,6 +6,18 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
+func (db *sqlite) GetBetweenSkins(limit, offset int) ([]entity.DbSteamSkins, error) {
+	var skins []entity.DbSteamSkins
+
+	str := "select * from between_skins order by id limit ? offset ?"
+
+	if err := db.db.Select(&skins, str, limit, offset); err != nil {
+		return nil, steam_helper.Trace(err, str)
+	}
+
+	return skins, nil
+}
+
 func (db *sqlite) GetPatternSkins(limit, offset int) ([]entity.DbSteamSkins, error) {
 	var skins []entity.DbSteamSkins
 
@@ -113,6 +125,25 @@ func (db *sqlite) GetSteamSkins(limit, offset int) ([]entity.DbSteamSkins, error
 
 func (db *sqlite) CreateSteamSkins(skins []entity.DbSteamSkins) error {
 	str := `insert or replace into steam_skins(id, name, runame, link) 
+	values(?, ?, ?, ?)`
+
+	stmt, err := db.db.Preparex(str)
+	if err != nil {
+		return steam_helper.Trace(err, str)
+	}
+
+	for _, value := range skins {
+		_, err := stmt.Exec(str, value.Id, value.Name, value.RuName, value.Link)
+		if err != nil {
+			return steam_helper.Trace(err, str)
+		}
+	}
+
+	return nil
+}
+
+func (db *sqlite) CreateBetweenSkins(skins []entity.DbSteamSkins) error {
+	str := `insert or replace into between_skins(id, name, runame, link) 
 	values(?, ?, ?, ?)`
 
 	stmt, err := db.db.Preparex(str)

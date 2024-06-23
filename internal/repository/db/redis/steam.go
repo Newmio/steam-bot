@@ -8,10 +8,31 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
+func (db *redisRepo) GetBetweenSkins(start, stop int) ([]entity.DbSteamSkins, error) {
+	var skins []entity.DbSteamSkins
+
+	c, err := db.db.LRange(context.Background(), "between_skins", int64(start), int64(stop)).Result()
+	if err != nil {
+		return nil, steam_helper.Trace(err)
+	}
+
+	for _, value := range c {
+		var skin entity.DbSteamSkins
+
+		if err := json.Unmarshal([]byte(value), &skin); err != nil {
+			return nil, steam_helper.Trace(err)
+		}
+
+		skins = append(skins, skin)
+	}
+
+	return skins, nil
+}
+
 func (db *redisRepo) GetPatternSkins(start, stop int) ([]entity.DbSteamSkins, error) {
 	var skins []entity.DbSteamSkins
 
-	c, err := db.db.LRange(context.Background(), "_skins", int64(start), int64(stop)).Result()
+	c, err := db.db.LRange(context.Background(), "pattern_skins", int64(start), int64(stop)).Result()
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
@@ -32,7 +53,7 @@ func (db *redisRepo) GetPatternSkins(start, stop int) ([]entity.DbSteamSkins, er
 func (db *redisRepo) GetFloatSkins(start, stop int) ([]entity.DbSteamSkins, error) {
 	var skins []entity.DbSteamSkins
 
-	c, err := db.db.LRange(context.Background(), "_skins", int64(start), int64(stop)).Result()
+	c, err := db.db.LRange(context.Background(), "float_skins", int64(start), int64(stop)).Result()
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
@@ -53,7 +74,7 @@ func (db *redisRepo) GetFloatSkins(start, stop int) ([]entity.DbSteamSkins, erro
 func (db *redisRepo) GetStickerSkins(start, stop int) ([]entity.DbSteamSkins, error) {
 	var skins []entity.DbSteamSkins
 
-	c, err := db.db.LRange(context.Background(), "_skins", int64(start), int64(stop)).Result()
+	c, err := db.db.LRange(context.Background(), "sticker_skins", int64(start), int64(stop)).Result()
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
@@ -74,7 +95,7 @@ func (db *redisRepo) GetStickerSkins(start, stop int) ([]entity.DbSteamSkins, er
 func (db *redisRepo) GetSteamSkins(start, stop int) ([]entity.DbSteamSkins, error) {
 	var skins []entity.DbSteamSkins
 
-	c, err := db.db.LRange(context.Background(), "_skins", int64(start), int64(stop)).Result()
+	c, err := db.db.LRange(context.Background(), "steam_skins", int64(start), int64(stop)).Result()
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
@@ -95,7 +116,7 @@ func (db *redisRepo) GetSteamSkins(start, stop int) ([]entity.DbSteamSkins, erro
 func (db *redisRepo) GetSeleniumSteamSkins(start, stop int) ([]entity.SeleniumSteamSkin, error) {
 	var skins []entity.SeleniumSteamSkin
 
-	c, err := db.db.LRange(context.Background(), "_skins", int64(start), int64(stop)).Result()
+	c, err := db.db.LRange(context.Background(), "selenium_steam_skins", int64(start), int64(stop)).Result()
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
@@ -190,6 +211,23 @@ func (db *redisRepo) CreateSeleniumSteamSkins(skins []entity.SeleniumSteamSkin) 
 		}
 
 		err = db.db.RPush(context.Background(), "selenium_steam_skins", string(body)).Err()
+		if err != nil {
+			return steam_helper.Trace(err)
+		}
+	}
+
+	return nil
+}
+
+func (db *redisRepo) CreateBetweenSkins(skins []entity.DbSteamSkins) error {
+	for _, value := range skins {
+
+		body, err := json.Marshal(value)
+		if err != nil {
+			return steam_helper.Trace(err, value)
+		}
+
+		err = db.db.RPush(context.Background(), "between_skins", string(body)).Err()
 		if err != nil {
 			return steam_helper.Trace(err)
 		}

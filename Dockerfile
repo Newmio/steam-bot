@@ -43,9 +43,6 @@ WORKDIR /go/src/app
 # Копируем исходный код приложения в контейнер
 COPY . .
 
-RUN nohup chromedriver --port=9515 --verbose 
-
-
 # Устанавливаем Selenium и другие пакеты Go
 RUN go mod tidy
 

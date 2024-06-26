@@ -43,8 +43,10 @@ WORKDIR /go/src/app
 # Копируем исходный код приложения в контейнер
 COPY . .
 
-# Делаем сценарий исполняемым
-RUN chmod +x /go/src/app/start.sh
+RUN nohup chromedriver --port=9515 --verbose 
+
+# Ждем 5 секунд, чтобы убедиться, что chromedriver запущен
+RUN sleep 5
 
 # Устанавливаем Selenium и другие пакеты Go
 RUN go mod tidy

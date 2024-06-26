@@ -5,22 +5,25 @@ import "time"
 type Bot struct {
 	SteamUser SteamUser `json:"steam_user"`
 	//Mu          sync.Mutex
-	MinSynchCost  float32   `json:"min_synch_cost"`
-	MaxSynchCost  float32   `json:"max_synch_cost"`
-	Synch         bool      `json:"synch"`
-	SteamTrade    bool      `json:"steam_trade"`
-	DmarketTrade  bool      `json:"dmarket_trade"`
-	CsmoneyTrade  bool      `json:"csmoney_trade"`
-	StickerTrade  bool      `json:"sticker_trade"`
-	FloatTrade    bool      `json:"float_trade"`
-	PatternTrade  bool      `json:"pattern_trade"`
-	DateStopBot   time.Time `json:"date_stop_bot"`
-	MaxSeleniumWd int       `json:"max_selenium_wd"`
+	Markets       map[string]market `json:"markets"`
+	DateStopBot   time.Time         `json:"date_stop_bot"`
+	MaxSeleniumWd int               `json:"max_selenium_wd"`
 	IsBusy        bool
 	Windows       int
 }
 
-type Proxy struct {
+type market struct {
+	MinCount     int     `json:"min_count"`
+	MinSynchCost float64 `json:"min_synch_cost"`
+	MaxSynchCost float64 `json:"max_synch_cost"`
+	Synch        bool    `json:"synch"`
+	Trade        bool    `json:"trade"`
+	StickerTrade bool    `json:"sticker_trade"`
+	FloatTrade   bool    `json:"float_trade"`
+	PatternTrade bool    `json:"pattern_trade"`
+}
+
+type proxy struct {
 	Ip       string `json:"ip"`
 	Port     string `json:"port"`
 	Login    string `json:"login"`
@@ -34,27 +37,25 @@ type SteamUser struct {
 	ProfileLink string  `json:"profile_link"`
 	Login       string  `json:"login"`
 	Password    string  `json:"password"`
-	Proxy       []Proxy `json:"proxy"`
+	Proxy       []proxy `json:"proxy"`
 }
 
-func (bot *Bot) CheckAction(action string) bool {
+func (bot *Bot) CheckAction(marketName, action string) bool {
 
 	if bot.DateStopBot.After(time.Now()) && !bot.IsBusy {
+		market := bot.Markets[marketName]
+
 		switch action {
 		case "synch":
-			return bot.Synch
-		case "steam_trade":
-			return bot.SteamTrade
-		case "dmarket_trade":
-			return bot.DmarketTrade
-		case "csmoney_trade":
-			return bot.CsmoneyTrade
+			return market.Synch
+		case "trade":
+			return market.Trade
 		case "sticker_trade":
-			return bot.StickerTrade
+			return market.StickerTrade
 		case "float_trade":
-			return bot.FloatTrade
+			return market.FloatTrade
 		case "pattern_trade":
-			return bot.PatternTrade
+			return market.PatternTrade
 		}
 	}
 

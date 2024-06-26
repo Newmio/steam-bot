@@ -4,6 +4,7 @@ import (
 	"bot/internal/configs/bot"
 	"bot/internal/configs/sqlite"
 	"bot/internal/domain/usecase"
+	usecasedmarket "bot/internal/domain/usecase/dmarket"
 	usecasesteam "bot/internal/domain/usecase/steam"
 	repodb "bot/internal/repository/db"
 	reporedis "bot/internal/repository/db/redis"
@@ -34,7 +35,8 @@ func Init() {
 	repoSqlite := reposqlite.NewSqlite(sqlite)
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo)
-	usecase := usecase.NewUseCase(steamUsecase, bot)
+	dmarketUsecase := usecasedmarket.NewDmarket(seleniumRepo, dbRepo)
+	usecase := usecase.NewUseCase(steamUsecase, dmarketUsecase, bot)
 	authHandler := http.NewHandler(usecase)
 	authHandler.InitRoutes(e)
 

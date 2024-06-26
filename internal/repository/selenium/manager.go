@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	repodmarket "bot/internal/repository/selenium/dmarket"
 	reposteam "bot/internal/repository/selenium/steam"
 
 	"github.com/Newmio/steam_helper"
@@ -13,14 +14,17 @@ import (
 )
 
 type ISelenium interface {
-	SteamLogin(user entity.SteamUser) error
-	SynchSteamCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	SteamLogin() error
+	SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	Ping(url string) error
 }
 
 type seleniumRepo struct {
-	wd    map[string]selenium.WebDriver
-	user  entity.SteamUser
-	steam reposteam.ISteam
+	wd      map[string]selenium.WebDriver
+	user    entity.SteamUser
+	steam   reposteam.ISteam
+	dmarket repodmarket.IDmarket
 }
 
 func NewSelenium(user entity.SteamUser) ISelenium {
@@ -33,25 +37,37 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 
 	return &seleniumRepo{
-		steam: reposteam.NewSteam(),
-		user:  user,
-		wd:    map[string]selenium.WebDriver{"steam": wd},
+		dmarket: repodmarket.NewDmarket(),
+		steam:   reposteam.NewSteam(),
+		user:    user,
+		wd:      map[string]selenium.WebDriver{"steam": wd},
 	}
 }
 
-func (r *seleniumRepo) SynchSteamCSGOSkins(login string, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
+func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
+	return r.dmarket.SynchCSGOSkins(r.wd["dmarket"], ch)
+}
+
+func (r *seleniumRepo) SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
 	return r.steam.SynchCSGOSkins(r.wd["steam"], ch)
 }
 
-func (r *seleniumRepo) SteamLogin(user entity.SteamUser) error {
-	r.Test(r.wd["steam"])
-
-	return nil
-
-	_, err := r.steam.Login(r.wd["steam"], user)
+func (r *seleniumRepo) SteamLogin() error {
+	_, err := r.steam.Login(r.wd["steam"], r.user)
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
+
+	return nil
+}
+
+func (r *seleniumRepo) Ping(url string) error {
+	if err := r.wd["steam"].Get(url); err != nil {
+		fmt.Println(steam_helper.Trace(err))
+	}
+	defer r.wd["steam"].Close()
+
+	time.Sleep(2 * time.Second)
 
 	return nil
 }
@@ -88,15 +104,14 @@ func createDriver() (selenium.WebDriver, error) {
 	agent := steam_helper.GetRandomUserAgent()
 	window := steam_helper.GetRandomWindowSize()
 
-
 	chromeCaps := chrome.Capabilities{
 		Args: []string{
 			"--disable-webgl",         // Отключение WebGL
 			"--disable-webrtc",        // Отключение WebRTC
 			"--disable-notifications", // Отключение уведомлений
 			"--disable-rtc-smoothness-algorithm",
-			"--incognito", // Режим инкогнито
-			"--lang=ru",            // Изменение языка
+			"--incognito",             // Режим инкогнито
+			"--lang=ru",               // Изменение языка
 			"--no-sandbox",            // Отключение песочницы
 			"--disable-dev-shm-usage", // Отключение использования shared memory
 			"--disable-blink-features=AutomationControlled", // Отключение автоматических контролируемых функций

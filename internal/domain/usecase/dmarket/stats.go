@@ -1,4 +1,4 @@
-package usecasesteam
+package usecasedmarket
 
 import (
 	"bot/internal/domain/entity"
@@ -8,12 +8,10 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-//func (u *steam) GetInfoForSteamSkins()
-
-func (u *steam) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
+func (u *dmarket) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
 	ch := make(steam_helper.CursorCh[[]entity.SeleniumSteamSkin])
 
-	go u.r.SynchSteamCSGOSkins(ch)
+	go u.r.SynchDmarketCSGOSkins(ch)
 
 	for {
 		select {
@@ -33,7 +31,7 @@ func (u *steam) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
 				}
 			}
 
-			if err := u.db.CreateSeleniumSteamSkins(skins); err != nil {
+			if err := u.db.CreateSeleniumDmarketSkins(skins); err != nil {
 				return steam_helper.Trace(err)
 			}
 

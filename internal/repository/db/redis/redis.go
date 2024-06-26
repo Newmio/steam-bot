@@ -19,6 +19,7 @@ type IRedis interface {
 	GetFloatSkins(start, stop int) ([]entity.DbSteamSkins, error)
 	GetPatternSkins(start, stop int) ([]entity.DbSteamSkins, error)
 	GetBetweenSkins(start, stop int) ([]entity.DbSteamSkins, error)
+	CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin) error
 }
 
 type redisRepo struct {

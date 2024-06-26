@@ -10,7 +10,10 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     build-essential \
     libnss3 \
-    libxss1
+    libxss1 \
+    iproute2 \
+    macchanger \
+    e2fsprogs 
 
 # Устанавливаем Google Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \

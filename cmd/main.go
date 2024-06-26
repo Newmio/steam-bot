@@ -8,6 +8,7 @@ import (
 )
 
 // chromedriver --port=9515
+// docker system prune -a --volumes
 
 func main() {
 	os.Setenv("MOZ_REMOTE_SETTINGS_DEVTOOLS", "1")

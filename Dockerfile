@@ -45,11 +45,9 @@ COPY . .
 
 RUN nohup chromedriver --port=9515 --verbose 
 
-# Ждем 5 секунд, чтобы убедиться, что chromedriver запущен
-RUN sleep 5
 
 # Устанавливаем Selenium и другие пакеты Go
 RUN go mod tidy
 
 # Команда для запуска сценария
-CMD ["/go/src/app/start.sh"]
+CMD sh -c "nohup chromedriver --port=9515 --verbose && sleep 5 && go run cmd/main.go"

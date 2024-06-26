@@ -29,7 +29,7 @@ func (h *Handler) InitRoutes(e *echo.Echo) {
 }
 
 func (h *Handler) Ping(c echo.Context) error {
-	if err := h.s.Ping(c.QueryParam("url")); err != nil {
+	if err := h.s.Ping("https://" + c.QueryParam("url")); err != nil {
 		return c.HTML(500, steam_helper.Trace(err).Error())
 	}
 

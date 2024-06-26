@@ -7,5 +7,5 @@ import (
 )
 
 func OpenDb(dbName string) (*sqlx.DB, error) {
-	return sqlx.Open("sqlite3", fmt.Sprintf("./%s.db", dbName))
+	return sqlx.Open("sqlite3", fmt.Sprintf("./db/%s.db", dbName))
 }

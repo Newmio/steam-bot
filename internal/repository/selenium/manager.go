@@ -35,8 +35,12 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 
 	wd, err := createDriver()
 	if err != nil {
-		panic(err)
+		return nil
 	}
+
+	fmt.Println("@@@@@@@@@@@@@@@@@")
+	fmt.Println(wd)
+	fmt.Println("@@@@@@@@@@@@@@@@@")
 
 	return &seleniumRepo{
 		dmarket: repodmarket.NewDmarket(),

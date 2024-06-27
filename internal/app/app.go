@@ -36,7 +36,7 @@ func Init() {
 	// }
 
 	seleniumRepo := reposelenium.NewSelenium(bot.SteamUser)
-	fmt.Println("------------ 5 ------------")
+	fmt.Println("------------ 5 ------------", seleniumRepo)
 	repoRedis := reporedis.NewRedis(nil)
 	fmt.Println("------------ 6 ------------")
 	repoSqlite := reposqlite.NewSqlite(sqlite)

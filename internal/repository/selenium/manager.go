@@ -97,7 +97,6 @@ func (r *seleniumRepo) Ping(url string) error {
 	if err := r.wd["steam"].Get(url); err != nil {
 		return steam_helper.Trace(err)
 	}
-	defer r.wd["steam"].Close()
 
 	time.Sleep(2 * time.Second)
 

@@ -47,4 +47,4 @@ COPY . .
 RUN go mod tidy
 
 # Команда для запуска сценария
-CMD sh -c "chromedriver --port=9515 & sleep 20 && go run cmd/main.go"
+CMD sh -c "chromedriver --port=9515 & sleep 10 && go run cmd/main.go"

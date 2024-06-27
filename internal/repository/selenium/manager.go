@@ -3,6 +3,7 @@ package reposelenium
 import (
 	"bot/internal/domain/entity"
 	"fmt"
+	"sync"
 	"time"
 
 	repodmarket "bot/internal/repository/selenium/dmarket"
@@ -25,6 +26,7 @@ type seleniumRepo struct {
 	user    entity.SteamUser
 	steam   reposteam.ISteam
 	dmarket repodmarket.IDmarket
+	mu sync.Mutex
 }
 
 func NewSelenium(user entity.SteamUser) ISelenium {
@@ -45,15 +47,30 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 }
 
 func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
-	return r.dmarket.SynchCSGOSkins(r.wd["dmarket"], ch)
+	wd, err := r.getDriver("dmarket")
+	if err != nil{
+		return steam_helper.Trace(err)
+	}
+
+	return r.dmarket.SynchCSGOSkins(wd, ch)
 }
 
 func (r *seleniumRepo) SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
-	return r.steam.SynchCSGOSkins(r.wd["steam"], ch)
+	wd, err := r.getDriver("steam")
+	if err != nil{
+		return steam_helper.Trace(err)
+	}
+
+	return r.steam.SynchCSGOSkins(wd, ch)
 }
 
 func (r *seleniumRepo) SteamLogin() error {
-	_, err := r.steam.Login(r.wd["steam"], r.user)
+	wd, err := r.getDriver("steam")
+	if err != nil{
+		return steam_helper.Trace(err)
+	}
+
+	_, err = r.steam.Login(wd, r.user)
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
@@ -61,9 +78,24 @@ func (r *seleniumRepo) SteamLogin() error {
 	return nil
 }
 
+func (r *seleniumRepo) getDriver(name string)(selenium.WebDriver, error){
+	if _, ok := r.wd[name]; !ok{
+		wd, err := createDriver()
+		if err != nil{
+			return nil, steam_helper.Trace(err)
+		}
+
+		r.mu.Lock()
+		r.wd[name] = wd
+		r.mu.Unlock()
+	}
+
+	return r.wd[name], nil
+}
+
 func (r *seleniumRepo) Ping(url string) error {
 	if err := r.wd["steam"].Get(url); err != nil {
-		fmt.Println(steam_helper.Trace(err))
+		return steam_helper.Trace(err)
 	}
 	defer r.wd["steam"].Close()
 

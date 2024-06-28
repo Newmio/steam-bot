@@ -3,7 +3,15 @@ FROM golang:1.22.0
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
+    gcc \
     gnupg \
+    libc-dev \
+    libnss3 \
+    libgconf-2-4 \
+    libxss1 \
+    fonts-liberation \
+    libappindicator3-1 \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome
@@ -26,7 +34,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o bot cmd/main.go
+RUN GOOS=linux go build -o bot cmd/main.go
 
 RUN echo '#!/bin/sh\nchromedriver --port=9515 &\nsleep 10\n/app/bot' > /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh

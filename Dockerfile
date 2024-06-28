@@ -21,21 +21,16 @@ RUN wget -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-test
     && mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
     && chmod +x /usr/local/bin/chromedriver
 
-# Set environment variables for Go
-ENV GOPATH=/go
-ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
-
 # Create working directory
-WORKDIR /go/src/app
+WORKDIR /app
 
-# Copy the source code into the container
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
-
-# Install Go modules
-RUN go mod tidy
+RUN CGO_ENABLED=0 GOOS=linux go build -o bot cmd/main.go
 
 # Command to run the application
-CMD sh -c "chromedriver --port=9515 & sleep 10 && go run cmd/main.go"
+CMD ["chromedriver", "--port=9515", "&", "sleep", "10", "&&", "/app/bot"]
 
 
 

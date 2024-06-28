@@ -3,6 +3,7 @@ package bot
 import (
 	"bot/internal/domain/entity"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/Newmio/steam_helper"
@@ -11,7 +12,7 @@ import (
 func Init() entity.Bot {
 	var bot entity.Bot
 
-	file, err := os.Open("internal/configs/bot/bot.json")
+	file, err := os.Open(fmt.Sprintf("internal/configs/bot/%s.json", os.Getenv("FILE_NAME")))
 	if err != nil {
 		panic(steam_helper.Trace(err))
 	}

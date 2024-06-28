@@ -12,7 +12,7 @@ import (
 func Init() entity.Bot {
 	var bot entity.Bot
 
-	file, err := os.Open(fmt.Sprintf("internal/configs/bot/%s.json", os.Getenv("FILE_NAME")))
+	file, err := os.Open(fmt.Sprintf("internal/configs/bot/%s.json", os.Getenv("STEAM_LOGIN")))
 	if err != nil {
 		panic(steam_helper.Trace(err))
 	}

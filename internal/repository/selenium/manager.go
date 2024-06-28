@@ -104,6 +104,17 @@ func (r *seleniumRepo) Ping(url string) error {
 
 	time.Sleep(2 * time.Second)
 
+	html, err := r.wd["steam"].PageSource()
+	if err != nil {
+		return steam_helper.Trace(err)
+	}
+
+	fmt.Println("-----------------------------------------------")
+	fmt.Println("-----------------------------------------------")
+	fmt.Println(html)
+	fmt.Println("-----------------------------------------------")
+	fmt.Println("-----------------------------------------------")
+
 	return nil
 }
 

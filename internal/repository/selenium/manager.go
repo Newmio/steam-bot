@@ -1,11 +1,15 @@
 package reposelenium
 
 import (
+	"archive/zip"
 	"bot/internal/domain/entity"
 	"fmt"
+	"io"
+	"os"
 	"sync"
 	"time"
 
+	repocsmoney "bot/internal/repository/selenium/csmoney"
 	repodmarket "bot/internal/repository/selenium/dmarket"
 	reposteam "bot/internal/repository/selenium/steam"
 
@@ -18,6 +22,7 @@ type ISelenium interface {
 	SteamLogin() error
 	SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
 	SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	SynchCsmoneyCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
 	Ping(url string) error
 }
 
@@ -26,7 +31,8 @@ type seleniumRepo struct {
 	user    entity.SteamUser
 	steam   reposteam.ISteam
 	dmarket repodmarket.IDmarket
-	mu sync.Mutex
+	csmoney repocsmoney.ICsmoney
+	mu      sync.Mutex
 }
 
 func NewSelenium(user entity.SteamUser) ISelenium {
@@ -38,11 +44,8 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 		return nil
 	}
 
-	fmt.Println("@@@@@@@@@@@@@@@@@")
-	fmt.Println(wd)
-	fmt.Println("@@@@@@@@@@@@@@@@@")
-
 	return &seleniumRepo{
+		csmoney: repocsmoney.NewCsmoney(),
 		dmarket: repodmarket.NewDmarket(),
 		steam:   reposteam.NewSteam(),
 		user:    user,
@@ -50,9 +53,18 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
+func (r *seleniumRepo) SynchCsmoneyCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error{
+	wd, err := r.getDriver("csmoney")
+	if err != nil {
+		return steam_helper.Trace(err)
+	}
+
+	return r.csmoney.SynchCSGOSkins(wd, ch)
+}
+
 func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
 	wd, err := r.getDriver("dmarket")
-	if err != nil{
+	if err != nil {
 		return steam_helper.Trace(err)
 	}
 
@@ -61,7 +73,7 @@ func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.S
 
 func (r *seleniumRepo) SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
 	wd, err := r.getDriver("steam")
-	if err != nil{
+	if err != nil {
 		return steam_helper.Trace(err)
 	}
 
@@ -70,7 +82,7 @@ func (r *seleniumRepo) SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.Sel
 
 func (r *seleniumRepo) SteamLogin() error {
 	wd, err := r.getDriver("steam")
-	if err != nil{
+	if err != nil {
 		return steam_helper.Trace(err)
 	}
 
@@ -82,10 +94,10 @@ func (r *seleniumRepo) SteamLogin() error {
 	return nil
 }
 
-func (r *seleniumRepo) getDriver(name string)(selenium.WebDriver, error){
-	if _, ok := r.wd[name]; !ok{
+func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
+	if _, ok := r.wd[name]; !ok {
 		wd, err := createDriver()
-		if err != nil{
+		if err != nil {
 			return nil, steam_helper.Trace(err)
 		}
 
@@ -161,7 +173,7 @@ func createDriver() (selenium.WebDriver, error) {
 			"--no-sandbox",            // Отключение песочницы
 			"--disable-dev-shm-usage", // Отключение использования shared memory
 			"--disable-blink-features=AutomationControlled", // Отключение автоматических контролируемых функций
-			"--headless",
+			//"--headless-new", // Не отображать окно браузера
 			"--user-agent=" + agent,
 			fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 		},
@@ -320,3 +332,120 @@ func createDriver() (selenium.WebDriver, error) {
 
 // 	return wd, nil
 // }
+
+func BuildProxyExtension(zipFName, host, port, userName, password string) error {
+
+	const (
+		manifestFName = "manifest.json"
+		backFName     = "background.js"
+	)
+
+	manifest_json := `{
+		  "version": "1.0.0",
+		  "manifest_version": 2,
+		  "name": "Chrome Proxy",
+		  "permissions": [
+			"proxy",
+			"tabs",
+			"unlimitedStorage",
+			"storage",
+			"<all_urls>",
+			"webRequest",
+			"webRequestBlocking"
+		  ],
+		  "background": {
+			"scripts": ["background.js"]
+		  },
+		  "minimum_chrome_version":"22.0.0"
+		}`
+
+	background_js := fmt.Sprintf(`var config = {
+		  mode: "fixed_servers",
+		  rules: {
+			singleProxy: {
+			  scheme: "http",
+			  host: "%s",
+			  port: parseInt(%s)
+			},
+			bypassList: ["localhost"]
+		  }
+		};
+		
+		chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+		
+		function callbackFn(details) {
+		  return {
+			authCredentials: {
+			  username: "%s",
+			  password: "%s"
+			}
+		  };
+		}
+		
+		chrome.webRequest.onAuthRequired.addListener(
+		  callbackFn,
+		  {urls: ["<all_urls>"]},
+		  ['blocking']
+		);`, host, port, userName, password)
+
+	fos, err := os.Create(zipFName)
+	if err != nil {
+		return fmt.Errorf("os.Create Error: %w", err)
+	}
+	defer fos.Close()
+	zipWriter := zip.NewWriter(fos)
+
+	preManifestFile, err := os.Create(manifestFName)
+	if err != nil {
+		return fmt.Errorf("os.Create manifestFile Error: %w", err)
+	}
+	if _, err = preManifestFile.Write([]byte(manifest_json)); err != nil {
+		return fmt.Errorf("preManifestFile.Write Error: %w", err)
+	}
+	preManifestFile.Close()
+	manifestFile, err := os.Open(manifestFName)
+	if err != nil {
+		return fmt.Errorf("os.Open manifestFile  Error: %w", err)
+	}
+
+	wmf, err := zipWriter.Create(manifestFName)
+	if err != nil {
+		return fmt.Errorf("zipWriter.Create Error: %w", err)
+	}
+	if _, err := io.Copy(wmf, manifestFile); err != nil {
+		return fmt.Errorf("io.Copy Error: %w", err)
+	}
+	manifestFile.Close()
+
+	preBackFile, err := os.Create(backFName)
+	if err != nil {
+		return fmt.Errorf("os.Create preBackFile  Error: %w", err)
+	}
+	if _, err = preBackFile.Write([]byte(background_js)); err != nil {
+		return fmt.Errorf("preBackFile.Write Error: %w", err)
+	}
+	preBackFile.Close()
+
+	backFile, err := os.Open(backFName)
+	if err != nil {
+		return fmt.Errorf("os.Open backFile Error: %w", err)
+	}
+
+	wbf, err := zipWriter.Create(backFName)
+	if err != nil {
+		return fmt.Errorf("zipWriter.Create(backFName) Error: %w", err)
+	}
+	if _, err := io.Copy(wbf, backFile); err != nil {
+		return fmt.Errorf("io.Copy Error: %w", err)
+	}
+	backFile.Close()
+	if err := os.Remove(manifestFName); err != nil {
+		return fmt.Errorf("os.Remove(manifestFName) Error: %w", err)
+	}
+
+	if err := os.Remove(backFName); err != nil {
+		return fmt.Errorf("os.Remove(backFName) Error: %w", err)
+	}
+
+	return zipWriter.Close()
+}

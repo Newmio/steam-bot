@@ -20,6 +20,7 @@ type IDatabase interface {
 	GetPatternSkins(limit, offset int) ([]entity.DbSteamSkins, error)
 	CreateSeleniumSteamSkins(skins []entity.SeleniumSteamSkin) error
 	CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin) error
+	CreateSeleniumCsmoneySkins(skins []entity.SeleniumSteamSkin) error
 }
 
 type database struct {
@@ -29,6 +30,10 @@ type database struct {
 
 func NewDatabase(redis reporedis.IRedis, sqlite reposqlite.ISqlite) IDatabase {
 	return &database{redis: redis, sqlite: sqlite}
+}
+
+func (db *database) CreateSeleniumCsmoneySkins(skins []entity.SeleniumSteamSkin) error{
+	return db.redis.CreateSeleniumCsmoneySkins(skins)
 }
 
 func (db *database) CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin) error{

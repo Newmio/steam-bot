@@ -3,3 +3,4 @@ bot.db
 .DS_Store
 internal/configs/bot/bot.json
 database
+proxy_auth_plugin.zip

@@ -41,6 +41,7 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 
 	wd, err := createDriver()
 	if err != nil {
+		fmt.Println(err)
 		return nil
 	}
 
@@ -168,12 +169,12 @@ func createDriver() (selenium.WebDriver, error) {
 			"--disable-webrtc",        // Отключение WebRTC
 			"--disable-notifications", // Отключение уведомлений
 			"--disable-rtc-smoothness-algorithm",
-			"--incognito",             // Режим инкогнито
+			//"--incognito",             // Режим инкогнито
 			"--lang=ru",               // Изменение языка
 			"--no-sandbox",            // Отключение песочницы
 			"--disable-dev-shm-usage", // Отключение использования shared memory
 			"--disable-blink-features=AutomationControlled", // Отключение автоматических контролируемых функций
-			//"--headless-new", // Не отображать окно браузера
+			"--headless", // Не отображать окно браузера
 			"--user-agent=" + agent,
 			fmt.Sprintf("--window-size=%d,%d", window.Width, window.Height),
 		},
@@ -186,6 +187,12 @@ func createDriver() (selenium.WebDriver, error) {
 
 		//Extensions: []string{"proxyauth.zip"},
 	}
+
+	if err := BuildProxyExtension("proxy_auth_plugin.zip", "188.74.183.10", "8279", "yggdjocl", "vajq3n53awr1"); err != nil {
+		return nil, steam_helper.Trace(err)
+	}
+
+	chromeCaps.AddExtension("proxy_auth_plugin.zip")
 
 	script := `
     // Функция для генерации случайного целого числа в заданном диапазоне

@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     libappindicator3-1 \
     xdg-utils \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome

@@ -2,4 +2,4 @@ TODO
 bot.db
 .DS_Store
 internal/configs/bot/bot.json
-db
+database

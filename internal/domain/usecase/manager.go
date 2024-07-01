@@ -10,7 +10,7 @@ type IUseCase interface {
 	SteamAuth() error
 	SynchSteamCSGOSkins() error
 	SynchDmarketCSGOSkins() error
-	Ping(url string) error
+	Ping(url string) (string, error)
 }
 
 type useCase struct {
@@ -26,39 +26,44 @@ func NewUseCase(steam usecasesteam.ISteam, dmarket usecasedmarket.IDmarket, bot 
 func (u *useCase) SynchDmarketCSGOSkins() error {
 	market := u.bot.Markets["dmarket"]
 
-	if !u.bot.CheckAction("dmarket", "synch") {
-		return nil
+	if u.bot.CheckAction("dmarket", "synch") {
+
+		u.bot.IsBusy = true
+		return u.steam.SynchCSGOSkins(
+			market.MinSynchCost,
+			market.MaxSynchCost,
+			market.MinCount,
+		)
 	}
-	u.bot.IsBusy = true
-	return u.steam.SynchCSGOSkins(
-		market.MinSynchCost,
-		market.MaxSynchCost,
-		market.MinCount,
-	)
+
+	return nil
 }
 
 func (u *useCase) SynchSteamCSGOSkins() error {
 	market := u.bot.Markets["dmarket"]
 
 	if !u.bot.CheckAction("steam", "synch") {
-		return nil
+
+		u.bot.IsBusy = true
+		return u.steam.SynchCSGOSkins(
+			market.MinSynchCost,
+			market.MaxSynchCost,
+			market.MinCount,
+		)
 	}
-	u.bot.IsBusy = true
-	return u.steam.SynchCSGOSkins(
-		market.MinSynchCost,
-		market.MaxSynchCost,
-		market.MinCount,
-	)
+
+	return nil
 }
 
 func (u *useCase) SteamAuth() error {
-	if !u.bot.CheckAction("", "") {
-		return nil
+	if u.bot.CheckAction("", "") {
+		u.bot.IsBusy = true
+		return u.steam.SteamAuth()
 	}
-	u.bot.IsBusy = true
-	return u.steam.SteamAuth()
+
+	return nil
 }
 
-func (u *useCase) Ping(url string) error{
+func (u *useCase) Ping(url string) (string, error) {
 	return u.steam.Ping(url)
 }

@@ -3,7 +3,6 @@ package reposteam
 import (
 	"bot/internal/domain/entity"
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/Newmio/steam_helper"
@@ -11,16 +10,18 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
+func (r *steam) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) {
 	if err := wd.Get("https://steamcommunity.com/market/search?appid=730#p1_popular_desc"); err != nil {
-		return steam_helper.Trace(err, wd)
+		ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+		return
 	}
 
 	steam_helper.SleepRandom(9000, 10000)
 
 	start, err := steam_helper.GetStartMousePosition(wd)
 	if err != nil {
-		return steam_helper.Trace(err, wd)
+		ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+		return
 	}
 
 	for {
@@ -28,102 +29,106 @@ func (r *steam) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[
 
 		skins, err := wd.FindElements(selenium.ByCSSSelector, ".market_listing_row_link")
 		if err != nil {
-			return steam_helper.Trace(err, wd)
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
 		}
 
 		for _, skin := range skins {
 
 			hashNameElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_row.market_recent_listing_row.market_listing_searchresult")
 			if err != nil {
-				return steam_helper.Trace(err, skin)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				return
 			}
 
 			hashName, err := hashNameElement.GetAttribute("data-hash-name")
 			if err != nil {
-				return steam_helper.Trace(err, hashNameElement)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, hashNameElement))
+				return
 			}
 
 			ruNameElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_item_name")
 			if err != nil {
-				return steam_helper.Trace(err, skin)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				return
 			}
 
 			ruName, err := ruNameElement.Text()
 			if err != nil {
-				return steam_helper.Trace(err, ruNameElement)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, ruNameElement))
+				return
 			}
 
 			costMainElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_table_value.normal_price")
 			if err != nil {
-				return steam_helper.Trace(err, skin)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				return
 			}
 
 			costElement, err := costMainElement.FindElement(selenium.ByCSSSelector, ".normal_price")
 			if err != nil {
-				return steam_helper.Trace(err, costMainElement)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, costMainElement))
+				return
 			}
-
-			fmt.Println("======= 11 =========")
 
 			costStr, err := costElement.GetAttribute("data-price")
 			if err != nil {
-				return steam_helper.Trace(err, costElement)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, costElement))
+				return
 			}
-
-			fmt.Println("======= 12 =========")
 
 			countElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_num_listings_qty")
 			if err != nil {
-				return steam_helper.Trace(err, skin)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				return
 			}
-
-			fmt.Println("======= 13 =========")
 
 			countStr, err := countElement.Text()
 			if err != nil {
-				return steam_helper.Trace(err, countElement)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, countElement))
+				return
 			}
 
-			fmt.Println("======= 14 =========")
+			link, err := skin.GetAttribute("href")
+			if err != nil{
+				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				return
+			}
 
 			nextBtn, err := wd.FindElement(selenium.ByCSSSelector, ".pagebtn")
 			if err != nil {
-				return steam_helper.Trace(err, wd)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+				return
 			}
 
-			fmt.Println("======= 15 =========")
-
-			end, err := steam_helper.MoveMouseAndClick(nextBtn, start)
+			end, err := steam_helper.MoveMouseAndClick(wd, nextBtn, start)
 			if err != nil {
-				return steam_helper.Trace(err, nextBtn)
+				ch.WriteError(context.Background(), steam_helper.Trace(err, nextBtn))
+				return
 			}
 			start = end
 
-			fmt.Println("======= 16 =========")
-
 			cost, err := strconv.Atoi(costStr)
 			if err != nil {
-				return steam_helper.Trace(err)
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
 			}
-
-			fmt.Println("======= 17 =========")
 
 			count, err := strconv.Atoi(countStr)
 			if err != nil {
-				return steam_helper.Trace(err)
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
 			}
-
-			fmt.Println("======= 18 =========")
 
 			steamSkins = append(steamSkins, entity.SeleniumSteamSkin{
 				HashName: hashName,
 				RuName:   ruName,
 				Cost:     cost,
 				Count:    count,
+				Link: link,
 			})
 		}
 
-		fmt.Println("======= 19 =========")
 		ch.WriteModel(context.Background(), steamSkins)
 	}
 }

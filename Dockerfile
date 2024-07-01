@@ -38,10 +38,10 @@ COPY . .
 RUN GOOS=linux go build -o bot cmd/main.go
 
 RUN echo '#!/bin/sh\n\
-Xvfb :99 -screen 0 1280x1024x24 &\n\
+Xvfb :99 -screen 0 5120x2880x24 &\n\
 export DISPLAY=:99\n\
 chromedriver --port=9515 &\n\
-sleep 10\n\
+sleep \n\
 /app/bot' > /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 

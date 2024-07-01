@@ -1,6 +1,8 @@
 package entity
 
-import "time"
+import (
+	"time"
+)
 
 type Bot struct {
 	SteamUser SteamUser `json:"steam_user"`
@@ -56,6 +58,8 @@ func (bot *Bot) CheckAction(marketName, action string) bool {
 			return market.FloatTrade
 		case "pattern_trade":
 			return market.PatternTrade
+		default:
+			return true
 		}
 	}
 

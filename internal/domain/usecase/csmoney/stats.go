@@ -8,10 +8,10 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-func (u *csmoney) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
+func (s *csmoney) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
 	ch := make(steam_helper.CursorCh[[]entity.SeleniumSteamSkin])
 
-	go u.r.SynchCsmoneyCSGOSkins(ch)
+	go s.r.SynchCsmoneyCSGOSkins(ch)
 
 	for {
 		select {
@@ -31,7 +31,7 @@ func (u *csmoney) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
 				}
 			}
 
-			if err := u.db.CreateSeleniumCsmoneySkins(skins); err != nil {
+			if err := s.db.CreateSeleniumCsmoneySkins(skins); err != nil {
 				return steam_helper.Trace(err)
 			}
 

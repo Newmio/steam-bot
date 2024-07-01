@@ -9,7 +9,7 @@ import (
 
 type ISteam interface {
 	Login(wd selenium.WebDriver, user entity.SteamUser) (string, error)
-	SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin])
 }
 
 type steam struct{}

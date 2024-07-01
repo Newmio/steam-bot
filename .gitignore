@@ -4,3 +4,4 @@ bot.db
 internal/configs/bot/bot.json
 database
 proxy_auth_plugin.zip
+delete_headers_plugin.zip

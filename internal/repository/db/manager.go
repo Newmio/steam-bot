@@ -21,6 +21,7 @@ type IDatabase interface {
 	CreateSeleniumSteamSkins(skins []entity.SeleniumSteamSkin) error
 	CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin) error
 	CreateSeleniumCsmoneySkins(skins []entity.SeleniumSteamSkin) error
+	GetSeleniumSteamSkins(limit, offset int) ([]entity.SeleniumSteamSkin, error)
 }
 
 type database struct {
@@ -32,11 +33,11 @@ func NewDatabase(redis reporedis.IRedis, sqlite reposqlite.ISqlite) IDatabase {
 	return &database{redis: redis, sqlite: sqlite}
 }
 
-func (db *database) CreateSeleniumCsmoneySkins(skins []entity.SeleniumSteamSkin) error{
+func (db *database) CreateSeleniumCsmoneySkins(skins []entity.SeleniumSteamSkin) error {
 	return db.redis.CreateSeleniumCsmoneySkins(skins)
 }
 
-func (db *database) CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin) error{
+func (db *database) CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin) error {
 	return db.redis.CreateSeleniumDmarketSkins(skins)
 }
 
@@ -62,6 +63,10 @@ func (db *database) CreateFloatSkins(skins []entity.DbSteamSkins) error {
 
 func (db *database) CreatePatternSkins(skins []entity.DbSteamSkins) error {
 	return db.redis.CreatePatternSkins(skins)
+}
+
+func (db *database) GetSeleniumSteamSkins(limit, offset int) ([]entity.SeleniumSteamSkin, error) {
+	return db.redis.GetSeleniumSteamSkins(offset, limit+offset-1)
 }
 
 func (db *database) GetSteamSkins(limit, offset int) ([]entity.DbSteamSkins, error) {

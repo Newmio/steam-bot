@@ -8,12 +8,28 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-//func (u *steam) GetInfoForSteamSkins()
+func (s *steam) SearchStickerSkins() error {
+	limit, offset := 100, 0
 
-func (u *steam) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
+	for {
+		skins, err := s.db.GetSeleniumSteamSkins(limit, offset)
+		if err != nil{
+			return steam_helper.Trace(err)
+		}
+
+		for _, value := range skins{
+			
+		}
+
+		limit += 100
+		offset += 100
+	}
+}
+
+func (s *steam) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
 	ch := make(steam_helper.CursorCh[[]entity.SeleniumSteamSkin])
 
-	go u.r.SynchSteamCSGOSkins(ch)
+	go s.r.SynchSteamCSGOSkins(ch)
 
 	for {
 		select {
@@ -33,7 +49,7 @@ func (u *steam) SynchCSGOSkins(minCost, maxCost float64, minCount int) error {
 				}
 			}
 
-			if err := u.db.CreateSeleniumSteamSkins(skins); err != nil {
+			if err := s.db.CreateSeleniumSteamSkins(skins); err != nil {
 				return steam_helper.Trace(err)
 			}
 

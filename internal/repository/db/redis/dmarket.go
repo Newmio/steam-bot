@@ -8,7 +8,7 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-func (db *redisRepo) CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin) error {
+func (db *redisRepo) CreateSeleniumDmarketSkins(skins []entity.SteamItem) error {
 	for _, value := range skins {
 
 		body, err := json.Marshal(value)
@@ -16,7 +16,7 @@ func (db *redisRepo) CreateSeleniumDmarketSkins(skins []entity.SeleniumSteamSkin
 			return steam_helper.Trace(err, value)
 		}
 
-		err = db.db.RPush(context.Background(), "selenium_dmarket_skins", string(body)).Err()
+		err = db.db.RPush(context.Background(), "selenium_dmarket_items", string(body)).Err()
 		if err != nil {
 			return steam_helper.Trace(err)
 		}

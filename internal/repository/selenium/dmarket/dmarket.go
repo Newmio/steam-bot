@@ -8,7 +8,7 @@ import (
 )
 
 type IDmarket interface {
-	SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SteamItem]) error
 }
 
 type dmarket struct {

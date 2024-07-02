@@ -18,9 +18,8 @@ import (
 
 type ISelenium interface {
 	SteamLogin() error
-	SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin])
-	SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
-	SynchCsmoneyCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error
+	SynchCSGOItems(ch steam_helper.CursorCh[[]entity.SteamItem])
+	SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SteamItem]) error
 	Ping(url string) (string, error)
 }
 
@@ -52,16 +51,7 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
-func (r *seleniumRepo) SynchCsmoneyCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
-	wd, err := r.getDriver("csmoney")
-	if err != nil {
-		return steam_helper.Trace(err)
-	}
-
-	return r.csmoney.SynchCSGOSkins(wd, ch)
-}
-
-func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
+func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SteamItem]) error {
 	wd, err := r.getDriver("dmarket")
 	if err != nil {
 		return steam_helper.Trace(err)
@@ -70,13 +60,13 @@ func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.S
 	return r.dmarket.SynchCSGOSkins(wd, ch)
 }
 
-func (r *seleniumRepo) SynchSteamCSGOSkins(ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) {
+func (r *seleniumRepo) SynchCSGOItems(ch steam_helper.CursorCh[[]entity.SteamItem]) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err))
 	}
 
-	r.steam.SynchCSGOSkins(wd, ch)
+	r.steam.SynchCSGOItems(wd, ch)
 }
 
 func (r *seleniumRepo) SteamLogin() error {

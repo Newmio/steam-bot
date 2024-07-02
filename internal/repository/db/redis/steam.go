@@ -4,233 +4,43 @@ import (
 	"bot/internal/domain/entity"
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Newmio/steam_helper"
 )
 
-func (db *redisRepo) GetBetweenSkins(start, stop int) ([]entity.DbSteamSkins, error) {
-	var skins []entity.DbSteamSkins
+func (db *redisRepo) CreateSteamItems(items []entity.SteamItem, game string) error {
+	pipe := db.db.TxPipeline()
 
-	c, err := db.db.LRange(context.Background(), "between_skins", int64(start), int64(stop)).Result()
-	if err != nil {
-		return nil, steam_helper.Trace(err)
-	}
-
-	for _, value := range c {
-		var skin entity.DbSteamSkins
-
-		if err := json.Unmarshal([]byte(value), &skin); err != nil {
-			return nil, steam_helper.Trace(err)
-		}
-
-		skins = append(skins, skin)
-	}
-
-	return skins, nil
-}
-
-func (db *redisRepo) GetPatternSkins(start, stop int) ([]entity.DbSteamSkins, error) {
-	var skins []entity.DbSteamSkins
-
-	c, err := db.db.LRange(context.Background(), "pattern_skins", int64(start), int64(stop)).Result()
-	if err != nil {
-		return nil, steam_helper.Trace(err)
-	}
-
-	for _, value := range c {
-		var skin entity.DbSteamSkins
-
-		if err := json.Unmarshal([]byte(value), &skin); err != nil {
-			return nil, steam_helper.Trace(err)
-		}
-
-		skins = append(skins, skin)
-	}
-
-	return skins, nil
-}
-
-func (db *redisRepo) GetFloatSkins(start, stop int) ([]entity.DbSteamSkins, error) {
-	var skins []entity.DbSteamSkins
-
-	c, err := db.db.LRange(context.Background(), "float_skins", int64(start), int64(stop)).Result()
-	if err != nil {
-		return nil, steam_helper.Trace(err)
-	}
-
-	for _, value := range c {
-		var skin entity.DbSteamSkins
-
-		if err := json.Unmarshal([]byte(value), &skin); err != nil {
-			return nil, steam_helper.Trace(err)
-		}
-
-		skins = append(skins, skin)
-	}
-
-	return skins, nil
-}
-
-func (db *redisRepo) GetStickerSkins(start, stop int) ([]entity.DbSteamSkins, error) {
-	var skins []entity.DbSteamSkins
-
-	c, err := db.db.LRange(context.Background(), "sticker_skins", int64(start), int64(stop)).Result()
-	if err != nil {
-		return nil, steam_helper.Trace(err)
-	}
-
-	for _, value := range c {
-		var skin entity.DbSteamSkins
-
-		if err := json.Unmarshal([]byte(value), &skin); err != nil {
-			return nil, steam_helper.Trace(err)
-		}
-
-		skins = append(skins, skin)
-	}
-
-	return skins, nil
-}
-
-func (db *redisRepo) GetSteamSkins(start, stop int) ([]entity.DbSteamSkins, error) {
-	var skins []entity.DbSteamSkins
-
-	c, err := db.db.LRange(context.Background(), "steam_skins", int64(start), int64(stop)).Result()
-	if err != nil {
-		return nil, steam_helper.Trace(err)
-	}
-
-	for _, value := range c {
-		var skin entity.DbSteamSkins
-
-		if err := json.Unmarshal([]byte(value), &skin); err != nil {
-			return nil, steam_helper.Trace(err)
-		}
-
-		skins = append(skins, skin)
-	}
-
-	return skins, nil
-}
-
-func (db *redisRepo) GetSeleniumSteamSkins(start, stop int) ([]entity.SeleniumSteamSkin, error) {
-	var skins []entity.SeleniumSteamSkin
-
-	c, err := db.db.LRange(context.Background(), "selenium_steam_skins", int64(start), int64(stop)).Result()
-	if err != nil {
-		return nil, steam_helper.Trace(err)
-	}
-
-	for _, value := range c {
-		var skin entity.SeleniumSteamSkin
-
-		if err := json.Unmarshal([]byte(value), &skin); err != nil {
-			return nil, steam_helper.Trace(err)
-		}
-
-		skins = append(skins, skin)
-	}
-
-	return skins, nil
-}
-
-func (db *redisRepo) CreatePatternSkins(skins []entity.DbSteamSkins) error {
-	for _, value := range skins {
-
+	for _, value := range items {
 		body, err := json.Marshal(value)
 		if err != nil {
 			return steam_helper.Trace(err, value)
 		}
 
-		err = db.db.RPush(context.Background(), "pattern_skins", string(body)).Err()
-		if err != nil {
-			steam_helper.Trace(err)
-		}
-	}
-
-	return nil
-}
-
-func (db *redisRepo) CreateFloatSkins(skins []entity.DbSteamSkins) error {
-	for _, value := range skins {
-
-		body, err := json.Marshal(value)
-		if err != nil {
-			return steam_helper.Trace(err, value)
-		}
-
-		err = db.db.RPush(context.Background(), "float_skins", string(body)).Err()
-		if err != nil {
-			steam_helper.Trace(err)
-		}
-	}
-
-	return nil
-}
-
-func (db *redisRepo) CreateStickerSkins(skins []entity.DbSteamSkins) error {
-	for _, value := range skins {
-
-		body, err := json.Marshal(value)
-		if err != nil {
-			return steam_helper.Trace(err, value)
-		}
-
-		err = db.db.RPush(context.Background(), "sticker_skins", string(body)).Err()
-		if err != nil {
-			steam_helper.Trace(err)
-		}
-	}
-
-	return nil
-}
-
-func (db *redisRepo) CreateSteamSkins(skins []entity.DbSteamSkins) error {
-	for _, value := range skins {
-
-		body, err := json.Marshal(value)
-		if err != nil {
-			return steam_helper.Trace(err, value)
-		}
-
-		err = db.db.RPush(context.Background(), "steam_skins", string(body)).Err()
-		if err != nil {
-			steam_helper.Trace(err)
-		}
-	}
-
-	return nil
-}
-
-func (db *redisRepo) CreateSeleniumSteamSkins(skins []entity.SeleniumSteamSkin) error {
-	for _, value := range skins {
-
-		body, err := json.Marshal(value)
-		if err != nil {
-			return steam_helper.Trace(err, value)
-		}
-
-		err = db.db.RPush(context.Background(), "selenium_steam_skins", string(body)).Err()
-		if err != nil {
+		if err := pipe.HMSet(context.Background(), fmt.Sprintf("steam_%s_items_%s", game, value.HashName), body).Err(); err != nil {
 			return steam_helper.Trace(err)
 		}
 	}
 
+	if _, err := pipe.Exec(context.Background()); err != nil {
+		return steam_helper.Trace(err)
+	}
+
 	return nil
 }
 
-func (db *redisRepo) CreateBetweenSkins(skins []entity.DbSteamSkins) error {
-	for _, value := range skins {
+func (db *redisRepo) CreateHashSteamItems(hashNames []string, game string) error {
+	pipe := db.db.TxPipeline()
 
-		body, err := json.Marshal(value)
-		if err != nil {
-			return steam_helper.Trace(err, value)
-		}
-
-		err = db.db.RPush(context.Background(), "between_skins", string(body)).Err()
-		if err != nil {
+	for _, value := range hashNames {
+		if err := pipe.SAdd(context.Background(), fmt.Sprintf("steam_%s_items", game), value).Err(); err != nil {
 			return steam_helper.Trace(err)
 		}
+	}
+
+	if _, err := pipe.Exec(context.Background()); err != nil {
+		return steam_helper.Trace(err)
 	}
 
 	return nil

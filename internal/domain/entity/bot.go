@@ -16,9 +16,6 @@ type Bot struct {
 
 type market struct {
 	MinCount     int     `json:"min_count"`
-	MinSynchCost float64 `json:"min_synch_cost"`
-	MaxSynchCost float64 `json:"max_synch_cost"`
-	Synch        bool    `json:"synch"`
 	Trade        bool    `json:"trade"`
 	StickerTrade bool    `json:"sticker_trade"`
 	FloatTrade   bool    `json:"float_trade"`
@@ -48,8 +45,6 @@ func (bot *Bot) CheckAction(marketName, action string) bool {
 		market := bot.Markets[marketName]
 
 		switch action {
-		case "synch":
-			return market.Synch
 		case "trade":
 			return market.Trade
 		case "sticker_trade":

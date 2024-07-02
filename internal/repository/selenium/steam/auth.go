@@ -16,7 +16,7 @@ func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, err
 		return "", steam_helper.Trace(err)
 	}
 
-	steam_helper.SleepRandom(4000, 5000)
+	steam_helper.SleepRandom(5000, 6000)
 
 	cookieMsg, err := wd.FindElement(selenium.ByCSSSelector, ".btn_blue_steamui.btn_medium.replyButton")
 	if err != nil {
@@ -39,24 +39,24 @@ func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, err
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	end, err := steam_helper.TestMoveMouseAndWriteText(wd, inputs[0], start, user.Login)
+	end, err := steam_helper.MoveMouseAndWriteText(wd, inputs[0], start, user.Login)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
 
 	if haveCookie {
-		end, err = steam_helper.TestMoveMouseAndClick(wd, cookieMsg, end)
+		end, err = steam_helper.MoveMouseAndClick(wd, cookieMsg, end)
 		if err != nil {
 			return "", steam_helper.Trace(err, wd)
 		}
 	}
 
-	end, err = steam_helper.TestMoveMouseAndWriteText(wd, inputs[1], end, user.Password)
+	end, err = steam_helper.MoveMouseAndWriteText(wd, inputs[1], end, user.Password)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	_, err = steam_helper.TestMoveMouseAndClick(wd, loginBtn, end)
+	_, err = steam_helper.MoveMouseAndClick(wd, loginBtn, end)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}

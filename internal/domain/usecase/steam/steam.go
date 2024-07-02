@@ -7,7 +7,7 @@ import (
 
 type ISteam interface {
 	SteamAuth() error
-	SynchCSGOSkins(minCost, maxCost float64, minCount int) error
+	SynchCSGOItems() error
 	Ping(url string) (string, error)
 }
 

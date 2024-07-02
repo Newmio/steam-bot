@@ -21,10 +21,7 @@ func (h *handler) InitRoutes(e *echo.Echo) {
 
 	synch := e.Group("/synch")
 	{
-		csgo := synch.Group("/csgo")
-		{
-			csgo.GET("/steam", h.synchSteamCSGOSkins)
-		}
+		synch.GET("/csgo", h.synchCSGOItems)
 	}
 }
 

@@ -10,13 +10,17 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) {
+//func (r *steam) GetSkinInfo(wd selenium.WebDriver)
+
+func (r *steam) SynchCSGOItems(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SteamItem]) {
+	page, stop := 1, 0
+
 	if err := wd.Get("https://steamcommunity.com/market/search?appid=730#p1_popular_desc"); err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 		return
 	}
 
-	steam_helper.SleepRandom(9000, 10000)
+	steam_helper.SleepRandom(1000, 2000)
 
 	start, err := steam_helper.GetStartMousePosition(wd)
 	if err != nil {
@@ -25,7 +29,7 @@ func (r *steam) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[
 	}
 
 	for {
-		var steamSkins []entity.SeleniumSteamSkin
+		var steamSkins []entity.SteamItem
 
 		skins, err := wd.FindElements(selenium.ByCSSSelector, ".market_listing_row_link")
 		if err != nil {
@@ -83,30 +87,17 @@ func (r *steam) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[
 				return
 			}
 
-			countStr, err := countElement.Text()
+			countStr, err := countElement.GetAttribute("data-qty")
 			if err != nil {
 				ch.WriteError(context.Background(), steam_helper.Trace(err, countElement))
 				return
 			}
 
 			link, err := skin.GetAttribute("href")
-			if err != nil{
+			if err != nil {
 				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
 				return
 			}
-
-			nextBtn, err := wd.FindElement(selenium.ByCSSSelector, ".pagebtn")
-			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
-				return
-			}
-
-			end, err := steam_helper.MoveMouseAndClick(wd, nextBtn, start)
-			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, nextBtn))
-				return
-			}
-			start = end
 
 			cost, err := strconv.Atoi(costStr)
 			if err != nil {
@@ -120,15 +111,62 @@ func (r *steam) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[
 				return
 			}
 
-			steamSkins = append(steamSkins, entity.SeleniumSteamSkin{
+			steamSkins = append(steamSkins, entity.SteamItem{
 				HashName: hashName,
 				RuName:   ruName,
 				Cost:     cost,
 				Count:    count,
-				Link: link,
+				Link:     link,
 			})
 		}
 
 		ch.WriteModel(context.Background(), steamSkins)
+
+		if page == 0 {
+			stopPages, err := wd.FindElements(selenium.ByCSSSelector, ".market_paging_pagelink")
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+				return
+			}
+
+			for _, value := range stopPages {
+				p, err := value.Text()
+				if err != nil {
+					ch.WriteError(context.Background(), steam_helper.Trace(err, value))
+					return
+				}
+
+				intP, err := strconv.Atoi(p)
+				if err != nil {
+					ch.WriteError(context.Background(), steam_helper.Trace(err))
+					return
+				}
+
+				if intP > stop {
+					stop = intP
+				}
+			}
+		}
+
+		if stop == page {
+			return
+		} else {
+			page++
+		}
+
+		nextBtn, err := wd.FindElements(selenium.ByCSSSelector, ".pagebtn")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
+		}
+
+		end, err := steam_helper.MoveMouseAndClick(wd, nextBtn[1], start)
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, nextBtn))
+			return
+		}
+		start = end
+
+		steam_helper.SleepRandom(4000, 6000)
 	}
 }

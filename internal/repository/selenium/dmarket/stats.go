@@ -7,6 +7,6 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func (r *dmarket) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SeleniumSteamSkin]) error {
+func (r *dmarket) SynchCSGOSkins(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SteamItem]) error {
 	return nil
 }

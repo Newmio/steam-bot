@@ -8,8 +8,7 @@ import (
 
 type IUseCase interface {
 	SteamAuth() error
-	SynchSteamCSGOSkins() error
-	SynchDmarketCSGOSkins() error
+	SynchCSGOItems() error
 	Ping(url string) (string, error)
 }
 
@@ -23,36 +22,8 @@ func NewUseCase(steam usecasesteam.ISteam, dmarket usecasedmarket.IDmarket, bot 
 	return &useCase{bot: bot, steam: steam, dmarket: dmarket}
 }
 
-func (u *useCase) SynchDmarketCSGOSkins() error {
-	market := u.bot.Markets["dmarket"]
-
-	if u.bot.CheckAction("dmarket", "synch") {
-
-		u.bot.IsBusy = true
-		return u.steam.SynchCSGOSkins(
-			market.MinSynchCost,
-			market.MaxSynchCost,
-			market.MinCount,
-		)
-	}
-
-	return nil
-}
-
-func (u *useCase) SynchSteamCSGOSkins() error {
-	market := u.bot.Markets["dmarket"]
-
-	if !u.bot.CheckAction("steam", "synch") {
-
-		u.bot.IsBusy = true
-		return u.steam.SynchCSGOSkins(
-			market.MinSynchCost,
-			market.MaxSynchCost,
-			market.MinCount,
-		)
-	}
-
-	return nil
+func (u *useCase) SynchCSGOItems() error {
+	return u.steam.SynchCSGOItems()
 }
 
 func (u *useCase) SteamAuth() error {

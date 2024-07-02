@@ -7,10 +7,3 @@ type DbSteamSkins struct {
 	Link   string `db:"link"`
 }
 
-type SeleniumSteamSkin struct {
-	HashName string
-	RuName   string
-	Cost     int
-	Count    int
-	Link     string
-}

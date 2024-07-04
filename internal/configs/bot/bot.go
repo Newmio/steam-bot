@@ -9,8 +9,13 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-func Init() entity.Bot {
-	var bot entity.Bot
+type botConfig struct{
+	Bot entity.Bot `json:"bot"`
+	Markets map[string]entity.Market `json:"markets"`
+}
+
+func Init() botConfig {
+	var botConfig botConfig
 
 	filename := os.Getenv("STEAM_LOGIN")
 	if filename == "" {
@@ -23,9 +28,9 @@ func Init() entity.Bot {
 	}
 
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&bot); err != nil {
+	if err := decoder.Decode(&botConfig); err != nil {
 		panic(steam_helper.Trace(err))
 	}
 
-	return bot
+	return botConfig
 }

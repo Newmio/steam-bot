@@ -10,6 +10,7 @@ type IUseCase interface {
 	SteamAuth() error
 	SynchItems(game string) error
 	Ping(url string) (string, error)
+	CheckTradeItems(game string, start, stop int) error
 }
 
 type useCase struct {
@@ -22,19 +23,25 @@ func NewUseCase(steam usecasesteam.ISteam, dmarket usecasedmarket.IDmarket, bot 
 	return &useCase{bot: bot, steam: steam, dmarket: dmarket}
 }
 
-func (u *useCase) SynchItems(game string) error {
-	return u.steam.SynchItems(game)
+func (s *useCase) CheckTradeItems(game string, start, stop int) error {
+	return s.steam.CheckTradeItems(game, start, stop)
 }
 
-func (u *useCase) SteamAuth() error {
-	if u.bot.CheckAction("", "") {
-		u.bot.IsBusy = true
-		return u.steam.SteamAuth()
+func (s *useCase) SynchItems(game string) error {
+	return s.steam.SynchItems(game)
+}
+
+func (s *useCase) SteamAuth() error {
+	if s.bot.CheckAction("", "") {
+		s.bot.IsBusy = true
+		return s.steam.SteamAuth()
 	}
+
+	s.bot.IsBusy = false
 
 	return nil
 }
 
-func (u *useCase) Ping(url string) (string, error) {
-	return u.steam.Ping(url)
+func (s *useCase) Ping(url string) (string, error) {
+	return s.steam.Ping(url)
 }

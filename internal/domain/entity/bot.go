@@ -7,19 +7,62 @@ import (
 type Bot struct {
 	SteamUser SteamUser `json:"steam_user"`
 	//Mu          sync.Mutex
-	Markets       map[string]market `json:"markets"`
+	Markets       map[string]Market `json:"markets"`
 	DateStopBot   time.Time         `json:"date_stop_bot"`
 	MaxSeleniumWd int               `json:"max_selenium_wd"`
 	IsBusy        bool
 	Windows       int
 }
 
-type market struct {
-	MinCount     int     `json:"min_count"`
-	Trade        bool    `json:"trade"`
-	StickerTrade bool    `json:"sticker_trade"`
-	FloatTrade   bool    `json:"float_trade"`
-	PatternTrade bool    `json:"pattern_trade"`
+type Market struct {
+	Trade        trade        `json:"trade"`
+	StickerTrade stickerTrade `json:"sticker_trade"`
+	FloatTrade   floatTrade   `json:"float_trade"`
+	PatternTrade patternTrade `json:"pattern_trade"`
+}
+
+type trade struct {
+	Do           bool         `json:"do"`
+	RangeDay     int          `json:"range_day"`
+	MinCount     int          `json:"min_count"`
+	MinSellCount int          `json:"min_sell_count"`
+	MinCost      float64      `json:"min_cost"`
+	MinSellCost  float64      `json:"min_sell_cost"`
+	Offers       []tradeOffer `json:"offers"`
+}
+
+type stickerTrade struct {
+	Do             bool            `json:"do"`
+	MinProfit      int             `json:"min_profit"`
+	LikedStickers  []likedSticker  `json:"liked_stickers"`
+	IgnoreStickers []ignoreSticker `json:"ignore_stickers"`
+}
+
+type floatTrade struct{}
+
+type patternTrade struct{}
+
+type likedSticker struct {
+	ItemName    string  `json:"item_name"`
+	ItemHash    string  `json:"item_hash"`
+	StickerName string  `json:"sticker_name"`
+	StickerHash string  `json:"sticker_hash"`
+	Cost        float64 `json:"cost"`
+	One         bool    `json:"1"`
+	Two         bool    `json:"2"`
+	Three       bool    `json:"3"`
+	Four        bool    `json:"4"`
+}
+
+type ignoreSticker struct {
+	StickerName string `json:"sticker_name"`
+	StickerHash string `json:"sticker_hash"`
+}
+
+type tradeOffer struct {
+	MinProfit int `json:"min_profit"`
+	MaxProfit int `json:"max_profit"`
+	Count     int `json:"count"`
 }
 
 type proxy struct {
@@ -42,17 +85,9 @@ type SteamUser struct {
 func (bot *Bot) CheckAction(marketName, action string) bool {
 
 	if bot.DateStopBot.After(time.Now()) && !bot.IsBusy {
-		market := bot.Markets[marketName]
+		//market := bot.Markets[marketName]
 
 		switch action {
-		case "trade":
-			return market.Trade
-		case "sticker_trade":
-			return market.StickerTrade
-		case "float_trade":
-			return market.FloatTrade
-		case "pattern_trade":
-			return market.PatternTrade
 		default:
 			return true
 		}

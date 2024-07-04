@@ -8,20 +8,20 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
-func (s *steam) SearchTradeItems(game string, start, stop int) error {
+func (s *steam) CheckTradeItems(game string, start, stop int) error {
 	ch := make(steam_helper.CursorCh[entity.CheckItem])
 
-	hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
-	if err != nil {
-		return steam_helper.Trace(err)
-	}
+	// hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
+	// if err != nil {
+	// 	return steam_helper.Trace(err)
+	// }
 
-	links, err := s.db.GetLinkSteamItems(hashNames, game)
-	if err != nil {
-		return steam_helper.Trace(err)
-	}
+	// links, err := s.db.GetLinkSteamItems(hashNames, game)
+	// if err != nil {
+	// 	return steam_helper.Trace(err)
+	// }
 
-	go s.r.CheckTradeItem(links, ch)
+	go s.r.CheckTradeItems([]string{"https://steamcommunity.com/market/listings/730/USP-S%20%7C%20Black%20Lotus%20%28Field-Tested%29"}, ch)
 
 	for {
 		select {
@@ -31,8 +31,10 @@ func (s *steam) SearchTradeItems(game string, start, stop int) error {
 				return nil
 			}
 			if item.Error != nil {
-				return steam_helper.Trace(err)
+				return steam_helper.Trace(item.Error)
 			}
+
+			
 
 		case <-time.After(time.Minute):
 			return steam_helper.Trace(fmt.Errorf("timeout"))

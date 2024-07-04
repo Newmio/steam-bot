@@ -5,13 +5,15 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Newmio/steam_helper"
 
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) CheckTradeItem(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
+func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
+	//var checkItem entity.CheckItem
 
 	for _, link := range links {
 		if err := wd.Get(link); err != nil {
@@ -19,21 +21,138 @@ func (r *steam) CheckTradeItem(wd selenium.WebDriver, links []string, ch steam_h
 			return
 		}
 
+		fmt.Println("---------- 1 ----------")
+
 		steam_helper.SleepRandom(1000, 2000)
 
-		element, err := wd.FindElement(selenium.ByCSSSelector, ".searchResultsRows")
+		fmt.Println("---------- 2 ----------")
+
+		element, err := wd.FindElement(selenium.ByCSSSelector, ".market_content_block.market_home_listing_table.market_home_main_listing_table.market_listing_table")
 		if err != nil {
 			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 			return
 		}
 
-		items, err := element.FindElements(selenium.ByCSSSelector, ".market_listing_row.market_recent_listing_row")
+		fmt.Println("---------- 3 ----------")
+
+		_, err = element.FindElement(selenium.ByCSSSelector, ".market_listing_table_message")
+		if err == nil {
+			continue
+		}
+
+		fmt.Println("---------- 4 ----------")
+
+		rows, err := element.FindElement(selenium.ByID, "searchResultsRows")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, element))
+			return
+		}
+
+		items, err := rows.FindElements(selenium.ByCSSSelector, ".market_listing_row.market_recent_listing_row")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, rows))
+			return
+		}
+
+		for _, item := range items {
+
+			costElement, err := item.FindElement(selenium.ByCSSSelector, ".market_listing_price.market_listing_price_with_fee")
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err, item))
+				return
+			}
+
+			costStr, err := costElement.Text()
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err, costElement))
+				return
+			}
+
+			fmt.Println(costStr) //доделать парсить в ценку в копейках
+		}
+
+		btnDiv, err := wd.FindElement(selenium.ByID, "market_buyorder_info_show_details")
 		if err != nil {
 			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 			return
 		}
 
-		fmt.Println(len(items))
+		btn, err := btnDiv.FindElement(selenium.ByTagName, "span")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, btnDiv))
+			return
+		}
+
+		start, err := steam_helper.GetStartMousePosition(wd)
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err))
+			return
+		}
+
+		if _, err := steam_helper.MoveMouseAndClick(wd, btn, start); err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
+		}
+
+		table, err := wd.FindElement(selenium.ByCSSSelector, ".market_commodity_orders_table")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
+		}
+
+		orderElements, err := table.FindElements(selenium.ByTagName, "tr")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, table))
+			return
+		}
+
+		for i, orderElement := range orderElements {
+			if i == 0 {
+				continue
+			}
+
+			order, err := orderElement.FindElements(selenium.ByTagName, "td")
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err, orderElement))
+				return
+			}
+
+			costStr, err := order[0].Text()
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err, order[0]))
+				return
+			}
+
+			countStr, err := order[1].Text()
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err, order[1]))
+				return
+			}
+
+			fmt.Println(costStr, countStr) //доделать парсинг
+		}
+
+		scriptDiv, err := wd.FindElement(selenium.ByCSSSelector, ".pagecontent.no_header ")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
+		}
+
+		scriptElement, err := scriptDiv.FindElement(selenium.ByTagName, "script")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, scriptDiv))
+			return
+		}
+
+		script, err := scriptElement.Text()
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, scriptElement))
+			return
+		}
+
+		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@")
+		fmt.Println(strings.Contains(script, "line1"))
+		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@")
 
 		steam_helper.SleepRandom(1000, 2000)
 	}

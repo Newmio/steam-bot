@@ -20,7 +20,7 @@ type ISelenium interface {
 	SteamLogin() error
 	SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem])
 	Ping(url string) (string, error)
-	CheckTradeItem(links []string, ch steam_helper.CursorCh[entity.CheckItem])
+	CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem])
 }
 
 type seleniumRepo struct {
@@ -51,13 +51,13 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
-func (r *seleniumRepo) CheckTradeItem(links []string, ch steam_helper.CursorCh[entity.CheckItem]){
+func (r *seleniumRepo) CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err))
 	}
 
-	r.steam.CheckTradeItem(wd, links, ch)
+	r.steam.CheckTradeItems(wd, links, ch)
 }
 
 func (r *seleniumRepo) SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem]) {
@@ -85,6 +85,7 @@ func (r *seleniumRepo) SteamLogin() error {
 
 func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
 	if _, ok := r.wd[name]; !ok {
+		fmt.Println("creating driver", name)
 		wd, err := createDriver()
 		if err != nil {
 			return nil, steam_helper.Trace(err)
@@ -95,6 +96,7 @@ func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
 		r.mu.Unlock()
 	}
 
+	fmt.Println("returning driver", name)
 	return r.wd[name], nil
 }
 
@@ -104,8 +106,8 @@ func (r *seleniumRepo) Ping(url string) (string, error) {
 		return "", steam_helper.Trace(err)
 	}
 
-	//r.Test(wd)
-	//return "", nil
+	// r.Test(wd)
+	// return "", nil
 
 	if err := wd.Get(url); err != nil {
 		return "", steam_helper.Trace(err)
@@ -123,10 +125,23 @@ func (r *seleniumRepo) Ping(url string) (string, error) {
 
 func (r *seleniumRepo) Test(wd selenium.WebDriver) {
 
-	if err := wd.Get("https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Slate%20%28Minimal%20Wear%29"); err != nil {
+	if err := wd.Get("https://steamcommunity.com/market/pricehistory/?appid=730&market_hash_name=AK-47%20%7C%20Redline%20%28Field-Tested%29"); err != nil {
 		fmt.Println(steam_helper.Trace(err))
 		return
 	}
+
+	// if _, err := wd.ExecuteScript("window.open('about:blank', '_blank');", nil); err != nil {
+	// 	fmt.Println(steam_helper.Trace(err))
+	// 	return
+	// }
+
+	tabs, err := wd.WindowHandles()
+	if err != nil {
+		fmt.Println(steam_helper.Trace(err))
+		return
+	}
+
+	fmt.Println("tabs2", tabs)
 
 	time.Sleep(2 * time.Minute)
 }

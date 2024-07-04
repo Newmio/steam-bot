@@ -22,9 +22,9 @@ import (
 
 func Init() {
 	e := echo.New()
-	bot := bot.Init()
+	botConfig := bot.Init()
 
-	sqlite, err := sqlite.OpenDb(bot.SteamUser.Login)
+	sqlite, err := sqlite.OpenDb(botConfig.Bot.SteamUser.Login)
 	if err != nil {
 		panic(err)
 	}
@@ -34,8 +34,8 @@ func Init() {
 	// 	panic(err)
 	// }
 
-	if err := buildProxyExtension(bot.SteamUser.Proxy[0].Ip, bot.SteamUser.Proxy[0].Port,
-		bot.SteamUser.Proxy[0].Login, bot.SteamUser.Proxy[0].Password); err != nil {
+	if err := buildProxyExtension(botConfig.Bot.SteamUser.Proxy[0].Ip, botConfig.Bot.SteamUser.Proxy[0].Port,
+		botConfig.Bot.SteamUser.Proxy[0].Login, botConfig.Bot.SteamUser.Proxy[0].Password); err != nil {
 		fmt.Println(err)
 	}
 
@@ -43,13 +43,13 @@ func Init() {
 		fmt.Println(err)
 	}
 
-	seleniumRepo := reposelenium.NewSelenium(bot.SteamUser)
+	seleniumRepo := reposelenium.NewSelenium(botConfig.Bot.SteamUser)
 	repoRedis := reporedis.NewRedis(nil)
 	repoSqlite := reposqlite.NewSqlite(sqlite)
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
-	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo)
+	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo, botConfig.Markets["steam"])
 	dmarketUsecase := usecasedmarket.NewDmarket(seleniumRepo, dbRepo)
-	usecase := usecase.NewUseCase(steamUsecase, dmarketUsecase, bot)
+	usecase := usecase.NewUseCase(steamUsecase, dmarketUsecase, botConfig.Bot)
 	authHandler := http.NewHandler(usecase)
 	authHandler.InitRoutes(e)
 

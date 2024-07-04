@@ -2,6 +2,7 @@ package http
 
 import (
 	"bot/internal/domain/usecase"
+	"fmt"
 
 	"github.com/Newmio/steam_helper"
 	"github.com/labstack/echo/v4"
@@ -16,17 +17,35 @@ func NewHandler(s usecase.IUseCase) *handler {
 }
 
 func (h *handler) InitRoutes(e *echo.Echo) {
-	e.GET("/ping", h.ping)
+	e.POST("/ping", h.ping)
 	e.GET("/login", h.login)
 
 	synch := e.Group("/synch")
 	{
 		synch.GET("/csgo", h.synchItems)
 	}
+
+	check := e.Group("/check")
+	{
+		items := check.Group("/items")
+		{
+			items.GET("/steam", h.checkTradeItems)
+		}
+	}
 }
 
 func (h *handler) ping(c echo.Context) error {
-	html, err := h.s.Ping("https://" + c.QueryParam("url"))
+	type Url struct {
+		Url string `json:"url"`
+	}
+	var u Url
+	if err := c.Bind(&u); err != nil {
+		return c.JSON(400, steam_helper.Trace(err).Error())
+	}
+
+	fmt.Println(u.Url)
+
+	html, err := h.s.Ping(u.Url)
 	if err != nil {
 		return c.JSON(500, steam_helper.Trace(err).Error())
 	}

@@ -3,8 +3,8 @@ package entity
 import "time"
 
 type CheckItem struct {
-	Sell    []Offer
-	Buy     []Offer
+	Sell    []CheckOffer
+	Buy     []CheckOffer
 	History []SaleHistory
 }
 
@@ -14,7 +14,7 @@ type SaleHistory struct {
 	Count int
 }
 
-type Offer struct {
+type CheckOffer struct {
 	Cost  int
 	Count int
 }

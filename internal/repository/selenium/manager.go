@@ -18,9 +18,9 @@ import (
 
 type ISelenium interface {
 	SteamLogin() error
-	SynchCSGOItems(ch steam_helper.CursorCh[[]entity.SteamItem])
-	SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SteamItem]) error
+	SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem])
 	Ping(url string) (string, error)
+	CheckTradeItem(links []string, ch steam_helper.CursorCh[entity.CheckItem])
 }
 
 type seleniumRepo struct {
@@ -51,22 +51,22 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
-func (r *seleniumRepo) SynchDmarketCSGOSkins(ch steam_helper.CursorCh[[]entity.SteamItem]) error {
-	wd, err := r.getDriver("dmarket")
-	if err != nil {
-		return steam_helper.Trace(err)
-	}
-
-	return r.dmarket.SynchCSGOSkins(wd, ch)
-}
-
-func (r *seleniumRepo) SynchCSGOItems(ch steam_helper.CursorCh[[]entity.SteamItem]) {
+func (r *seleniumRepo) CheckTradeItem(links []string, ch steam_helper.CursorCh[entity.CheckItem]){
 	wd, err := r.getDriver("steam")
 	if err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err))
 	}
 
-	r.steam.SynchCSGOItems(wd, ch)
+	r.steam.CheckTradeItem(wd, links, ch)
+}
+
+func (r *seleniumRepo) SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem]) {
+	wd, err := r.getDriver("steam")
+	if err != nil {
+		ch.WriteError(context.Background(), steam_helper.Trace(err))
+	}
+
+	r.steam.SynchItems(wd, game, ch)
 }
 
 func (r *seleniumRepo) SteamLogin() error {
@@ -104,8 +104,8 @@ func (r *seleniumRepo) Ping(url string) (string, error) {
 		return "", steam_helper.Trace(err)
 	}
 
-	// r.Test(wd)
-	// return nil
+	//r.Test(wd)
+	//return "", nil
 
 	if err := wd.Get(url); err != nil {
 		return "", steam_helper.Trace(err)
@@ -123,30 +123,12 @@ func (r *seleniumRepo) Ping(url string) (string, error) {
 
 func (r *seleniumRepo) Test(wd selenium.WebDriver) {
 
-	if err := wd.Get("https://support.apple.com/ru-ru"); err != nil {
+	if err := wd.Get("https://steamcommunity.com/market/listings/730/AK-47%20%7C%20Slate%20%28Minimal%20Wear%29"); err != nil {
 		fmt.Println(steam_helper.Trace(err))
 		return
 	}
 
-	time.Sleep(time.Second * 2)
-
-	input, err := wd.FindElement(selenium.ByCSSSelector, ".as-navLink")
-	if err != nil {
-		fmt.Println(steam_helper.Trace(err))
-		return
-	}
-
-	start, err := steam_helper.GetStartMousePosition(wd)
-	if err != nil {
-		fmt.Println(steam_helper.Trace(err))
-		return
-	}
-
-	_, err = steam_helper.TestMoveMouseAndClick(wd, input, start)
-	if err != nil {
-		fmt.Println(steam_helper.Trace(err))
-		return
-	}
+	time.Sleep(2 * time.Minute)
 }
 
 func createDriver() (selenium.WebDriver, error) {
@@ -180,6 +162,7 @@ func createDriver() (selenium.WebDriver, error) {
 
 	chromeCaps.AddExtension("proxy_auth_plugin.zip")
 	chromeCaps.AddExtension("delete_headers_plugin.zip")
+	chromeCaps.AddExtension("JJICBEFPEMNPHINCCGIKPDAAGJEBBNHG_4_3_1_0.crx")
 
 	script := `
     // Функция для генерации случайного целого числа в заданном диапазоне

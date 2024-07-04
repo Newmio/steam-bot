@@ -3,6 +3,7 @@ package reposteam
 import (
 	"bot/internal/domain/entity"
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/Newmio/steam_helper"
@@ -10,12 +11,44 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-//func (r *steam) GetSkinInfo(wd selenium.WebDriver)
+func (r *steam) CheckTradeItem(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
 
-func (r *steam) SynchCSGOItems(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SteamItem]) {
+	for _, link := range links {
+		if err := wd.Get(link); err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err))
+			return
+		}
+
+		steam_helper.SleepRandom(1000, 2000)
+
+		element, err := wd.FindElement(selenium.ByCSSSelector, ".searchResultsRows")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
+		}
+
+		items, err := element.FindElements(selenium.ByCSSSelector, ".market_listing_row.market_recent_listing_row")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
+		}
+
+		fmt.Println(len(items))
+
+		steam_helper.SleepRandom(1000, 2000)
+	}
+}
+
+func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.CursorCh[[]entity.SteamItem]) {
+	var url string
 	page, stop := 1, 0
 
-	if err := wd.Get("https://steamcommunity.com/market/search?appid=730#p1_popular_desc"); err != nil {
+	switch game {
+	case "csgo":
+		url = "https://steamcommunity.com/market/search?appid=730#p1_popular_desc"
+	}
+
+	if err := wd.Get(url); err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 		return
 	}

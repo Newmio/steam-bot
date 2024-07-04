@@ -9,12 +9,14 @@ import (
 type IRedis interface {
 	CreateHashSteamItems(hashNames []string, game string) error
 	CreateSteamItems(items []entity.SteamItem, game string) error
+	GetHashSteamItems(game string, start, stop int64) ([]string, error)
+	GetLinkSteamItems(hashNames []string, game string) ([]string, error)
 }
 
 type redisRepo struct {
-	db *redis.Client
+	db *redis.ClusterClient
 }
 
-func NewRedis(db *redis.Client) IRedis {
+func NewRedis(db *redis.ClusterClient) IRedis {
 	return &redisRepo{db: db}
 }

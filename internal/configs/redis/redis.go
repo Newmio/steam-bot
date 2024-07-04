@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -16,7 +15,7 @@ type Config struct {
 	DbName   string
 }
 
-func OpenDb() (*redis.Client, error) {
+func OpenDb() (*redis.ClusterClient, error) {
 	v := viper.New()
 	v.AddConfigPath("internal/app/storage/redis")
 	v.SetConfigName("config")
@@ -34,19 +33,13 @@ func OpenDb() (*redis.Client, error) {
 	})
 }
 
-func initDb(c Config) (*redis.Client, error) {
-	dbName, err := strconv.Atoi(c.DbName)
-	if err != nil {
-		return nil, err
-	}
-
-	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", c.Host, c.Port),
+func initDb(c Config) (*redis.ClusterClient, error) {
+	client := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs:    []string{fmt.Sprintf("%s:%s", c.Host, c.Port)},
 		Password: c.Password,
-		DB:       dbName,
 	})
 
-	_, err = client.Ping(context.Background()).Result()
+	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err
 	}

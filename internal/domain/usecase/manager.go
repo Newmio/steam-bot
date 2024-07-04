@@ -8,7 +8,7 @@ import (
 
 type IUseCase interface {
 	SteamAuth() error
-	SynchCSGOItems() error
+	SynchItems(game string) error
 	Ping(url string) (string, error)
 }
 
@@ -22,8 +22,8 @@ func NewUseCase(steam usecasesteam.ISteam, dmarket usecasedmarket.IDmarket, bot 
 	return &useCase{bot: bot, steam: steam, dmarket: dmarket}
 }
 
-func (u *useCase) SynchCSGOItems() error {
-	return u.steam.SynchCSGOItems()
+func (u *useCase) SynchItems(game string) error {
+	return u.steam.SynchItems(game)
 }
 
 func (u *useCase) SteamAuth() error {

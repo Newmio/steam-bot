@@ -7,7 +7,7 @@ import (
 
 type ISteam interface {
 	SteamAuth() error
-	SynchCSGOItems() error
+	SynchItems(game string) error
 	Ping(url string) (string, error)
 }
 

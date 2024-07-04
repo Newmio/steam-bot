@@ -9,7 +9,8 @@ import (
 
 type ISteam interface {
 	Login(wd selenium.WebDriver, user entity.SteamUser) (string, error)
-	SynchCSGOItems(wd selenium.WebDriver, ch steam_helper.CursorCh[[]entity.SteamItem])
+	SynchItems(wd selenium.WebDriver, game string, ch steam_helper.CursorCh[[]entity.SteamItem])
+	CheckTradeItem(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem])
 }
 
 type steam struct{}

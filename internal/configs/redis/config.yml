@@ -1,4 +1,3 @@
 host: "localhost"
 port: "6379"
 password: "qwerty"
-dbName: "0"

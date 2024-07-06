@@ -21,6 +21,8 @@ type ISelenium interface {
 	SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem])
 	Ping(url string) (string, error)
 	CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem])
+	GetHistoryItems(links []string, ch steam_helper.CursorCh[entity.SteamSellHistory])
+	GetHistoryItem(link string) (entity.SteamSellHistory, error)
 }
 
 type seleniumRepo struct {
@@ -51,10 +53,47 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
+func (r *seleniumRepo) GetHistoryItem(link string) (entity.SteamSellHistory, error) {
+	ch := make(steam_helper.CursorCh[entity.SteamSellHistory])
+
+	wd, err := r.getDriver("steam")
+	if err != nil {
+		return entity.SteamSellHistory{}, steam_helper.Trace(err)
+	}
+
+	go r.steam.GetHistoryItems(wd, []string{link}, ch)
+
+	select {
+	case history, ok := <-ch:
+		if !ok {
+			return entity.SteamSellHistory{}, nil
+		}
+		if history.Error != nil {
+			return entity.SteamSellHistory{}, steam_helper.Trace(history.Error)
+		}
+
+		return history.Model, nil
+
+	case <-time.After(time.Minute):
+		return entity.SteamSellHistory{}, steam_helper.Trace(fmt.Errorf("timeout"))
+	}
+}
+
+func (r *seleniumRepo) GetHistoryItems(links []string, ch steam_helper.CursorCh[entity.SteamSellHistory]) {
+	wd, err := r.getDriver("steam")
+	if err != nil {
+		ch.WriteError(context.Background(), steam_helper.Trace(err))
+		return
+	}
+
+	r.steam.GetHistoryItems(wd, links, ch)
+}
+
 func (r *seleniumRepo) CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err))
+		return
 	}
 
 	r.steam.CheckTradeItems(wd, links, ch)
@@ -64,6 +103,7 @@ func (r *seleniumRepo) SynchItems(game string, ch steam_helper.CursorCh[[]entity
 	wd, err := r.getDriver("steam")
 	if err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err))
+		return
 	}
 
 	r.steam.SynchItems(wd, game, ch)
@@ -85,7 +125,6 @@ func (r *seleniumRepo) SteamLogin() error {
 
 func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
 	if _, ok := r.wd[name]; !ok {
-		fmt.Println("creating driver", name)
 		wd, err := createDriver()
 		if err != nil {
 			return nil, steam_helper.Trace(err)
@@ -96,7 +135,6 @@ func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
 		r.mu.Unlock()
 	}
 
-	fmt.Println("returning driver", name)
 	return r.wd[name], nil
 }
 

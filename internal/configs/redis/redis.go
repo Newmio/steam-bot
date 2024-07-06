@@ -2,18 +2,10 @@ package redis
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 )
-
-type Config struct {
-	Host     string
-	Port     string
-	Password string
-	DbName   string
-}
 
 func OpenDb() (*redis.ClusterClient, error) {
 	v := viper.New()
@@ -25,18 +17,13 @@ func OpenDb() (*redis.ClusterClient, error) {
 		return nil, err
 	}
 
-	return initDb(Config{
-		Host:     v.GetString("host"),
-		Port:     v.GetString("port"),
-		Password: v.GetString("password"),
-		DbName:   v.GetString("dbName"),
-	})
+	return initDb(v.GetString("password"), v.GetStringSlice("hosts"))
 }
 
-func initDb(c Config) (*redis.ClusterClient, error) {
+func initDb(pass string, hosts []string) (*redis.ClusterClient, error) {
 	client := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs:    []string{fmt.Sprintf("%s:%s", c.Host, c.Port)},
-		Password: c.Password,
+		Addrs:    hosts,
+		Password: pass,
 	})
 
 	_, err := client.Ping(context.Background()).Result()

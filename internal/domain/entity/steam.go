@@ -1,12 +1,15 @@
 package entity
 
-type PriceHistoryResponse struct {
-	Success bool        `json:"success"`
-	Prices  [][]interface{} `json:"prices"`
+import "time"
+
+type SteamSellHistory struct {
+	HashName    string
+	PriceSuffix string
+	Prices      []SteamItemPrice
 }
 
 type SteamItemPrice struct {
-	DateTime string
-	Price    float64
-	Quantity int
+	DateTime time.Time
+	Cost     int
+	Count    int
 }

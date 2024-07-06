@@ -15,6 +15,7 @@ type Bot struct {
 }
 
 type Market struct {
+	Commission   float64      `json:"commission"`
 	Trade        trade        `json:"trade"`
 	StickerTrade stickerTrade `json:"sticker_trade"`
 	FloatTrade   floatTrade   `json:"float_trade"`
@@ -22,13 +23,12 @@ type Market struct {
 }
 
 type trade struct {
-	Do           bool         `json:"do"`
-	RangeDay     int          `json:"range_day"`
-	MinCount     int          `json:"min_count"`
-	MinSellCount int          `json:"min_sell_count"`
-	MinCost      float64      `json:"min_cost"`
-	MinSellCost  float64      `json:"min_sell_cost"`
-	Offers       []tradeOffer `json:"offers"`
+	Do       bool         `json:"do"`
+	RangeDay int          `json:"range_day"` // диапазон дней по которому будем смотреть историю
+	MinCount int          `json:"min_count"` // минимальное количество предметов
+	MinCost  float64      `json:"min_cost"`  // минимальная стоимость предметов
+	MaxCost  float64      `json:"max_cost"`  // максимальная стоимость предметов
+	Offers   []tradeOffer `json:"offers"`
 }
 
 type stickerTrade struct {

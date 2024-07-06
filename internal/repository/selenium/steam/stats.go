@@ -3,17 +3,22 @@ package reposteam
 import (
 	"bot/internal/domain/entity"
 	"context"
+	"encoding/json"
 	"fmt"
+	"math"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Newmio/steam_helper"
 
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
-	//var checkItem entity.CheckItem
+func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.SteamSellHistory]) {
+	var resp map[string]interface{}
 
 	for _, link := range links {
 		if err := wd.Get(link); err != nil {
@@ -21,11 +26,68 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 			return
 		}
 
-		fmt.Println("---------- 1 ----------")
+		pre, err := wd.FindElement(selenium.ByTagName, "pre")
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			return
+		}
+
+		body, err := pre.Text()
+		if err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, pre))
+			return
+		}
+
+		if err := json.Unmarshal([]byte(body), &resp); err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err, body))
+			return
+		}
+
+		var prices []entity.SteamItemPrice
+
+		for _, value := range resp["prices"].([]interface{}){
+			value2 := value.([]interface{})
+			
+			dateTime, err := time.Parse("Jan 02 2006 15:04", strings.Replace(value2[0].(string), " +0", "00", -1))
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
+			}
+
+			cost := int(math.Round(value2[1].(float64) * 100))
+
+			count, err := strconv.Atoi(fmt.Sprint(value2[2].(string)))
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
+			}
+
+			prices = append(prices, entity.SteamItemPrice{
+				DateTime: dateTime,
+				Cost: cost,
+				Count: count,
+			})
+		}
+
+		steamSellHistory := entity.SteamSellHistory{
+			PriceSuffix: resp["price_suffix"].(string),
+			Prices: prices,
+		}
+
+		ch.WriteModel(context.Background(), steamSellHistory)
+	}
+	close(ch)
+}
+
+func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
+
+	for _, link := range links {
+		if err := wd.Get(link); err != nil {
+			ch.WriteError(context.Background(), steam_helper.Trace(err))
+			return
+		}
 
 		steam_helper.SleepRandom(1000, 2000)
-
-		fmt.Println("---------- 2 ----------")
 
 		element, err := wd.FindElement(selenium.ByCSSSelector, ".market_content_block.market_home_listing_table.market_home_main_listing_table.market_listing_table")
 		if err != nil {
@@ -33,14 +95,10 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 			return
 		}
 
-		fmt.Println("---------- 3 ----------")
-
 		_, err = element.FindElement(selenium.ByCSSSelector, ".market_listing_table_message")
 		if err == nil {
 			continue
 		}
-
-		fmt.Println("---------- 4 ----------")
 
 		rows, err := element.FindElement(selenium.ByID, "searchResultsRows")
 		if err != nil {
@@ -54,6 +112,7 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 			return
 		}
 
+		var costItemsSell []string
 		for _, item := range items {
 
 			costElement, err := item.FindElement(selenium.ByCSSSelector, ".market_listing_price.market_listing_price_with_fee")
@@ -68,7 +127,7 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 				return
 			}
 
-			fmt.Println(costStr) //доделать парсить в ценку в копейках
+			costItemsSell = append(costItemsSell, costStr)
 		}
 
 		btnDiv, err := wd.FindElement(selenium.ByID, "market_buyorder_info_show_details")
@@ -106,6 +165,8 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 			return
 		}
 
+		itemsBuy := make(map[string]string)
+
 		for i, orderElement := range orderElements {
 			if i == 0 {
 				continue
@@ -129,45 +190,83 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 				return
 			}
 
-			fmt.Println(costStr, countStr) //доделать парсинг
+			itemsBuy[costStr] = countStr
 		}
 
-		scriptDiv, err := wd.FindElement(selenium.ByCSSSelector, ".pagecontent.no_header ")
+		link, err := wd.CurrentURL()
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			ch.WriteError(context.Background(), steam_helper.Trace(err))
 			return
 		}
 
-		scriptElement, err := scriptDiv.FindElement(selenium.ByTagName, "script")
-		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, scriptDiv))
-			return
+		sell := make(map[int]int)
+		buy := make(map[int]int)
+
+		re := regexp.MustCompile("[^0-9]")
+
+		for _, cost := range costItemsSell {
+			costClear := re.ReplaceAllString(cost, "")
+
+			costInt, err := strconv.Atoi(costClear)
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
+			}
+
+			if strings.Contains(cost, ",") {
+				sell[costInt]++
+			}else{
+				sell[costInt*100]++
+			}
 		}
 
-		script, err := scriptElement.Text()
-		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, scriptElement))
-			return
+		for cost, count := range itemsBuy {
+			costClear := re.ReplaceAllString(cost, "")
+
+			costInt, err := strconv.Atoi(costClear)
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
+			}
+
+			countInt, err := strconv.Atoi(count)
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
+			}
+
+			if strings.Contains(cost, ",") {
+				buy[costInt] = countInt
+			}else{
+				buy[costInt*100] = countInt
+			}
 		}
 
-		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@")
-		fmt.Println(strings.Contains(script, "line1"))
-		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@")
+		hashName := strings.Split(link, "/")
+
+		checkItem := entity.CheckItem{
+			HashName: hashName[len(hashName)-1],
+			Sell: sell,
+			Buy:  buy,
+		}
+
+		ch.WriteModel(context.Background(), checkItem)
 
 		steam_helper.SleepRandom(1000, 2000)
 	}
+	close(ch)
 }
 
 func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.CursorCh[[]entity.SteamItem]) {
-	var url string
+	var reqUrl string
 	page, stop := 1, 0
 
 	switch game {
 	case "csgo":
-		url = "https://steamcommunity.com/market/search?appid=730#p1_popular_desc"
+		reqUrl = "https://steamcommunity.com/market/search?appid=730#p1_popular_desc"
 	}
 
-	if err := wd.Get(url); err != nil {
+	if err := wd.Get(reqUrl); err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 		return
 	}
@@ -215,60 +314,29 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 				return
 			}
 
-			costMainElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_table_value.normal_price")
-			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
-				return
-			}
-
-			costElement, err := costMainElement.FindElement(selenium.ByCSSSelector, ".normal_price")
-			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, costMainElement))
-				return
-			}
-
-			costStr, err := costElement.GetAttribute("data-price")
-			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, costElement))
-				return
-			}
-
-			countElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_num_listings_qty")
-			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
-				return
-			}
-
-			countStr, err := countElement.GetAttribute("data-qty")
-			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, countElement))
-				return
-			}
-
 			link, err := skin.GetAttribute("href")
 			if err != nil {
 				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
 				return
 			}
 
-			cost, err := strconv.Atoi(costStr)
+			imgLinkElement, err := hashNameElement.FindElement(selenium.ByCSSSelector, ".result_1_image")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				ch.WriteError(context.Background(), steam_helper.Trace(err, hashNameElement))
 				return
 			}
 
-			count, err := strconv.Atoi(countStr)
+			imgLink, err := imgLinkElement.GetAttribute("src")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				ch.WriteError(context.Background(), steam_helper.Trace(err, imgLinkElement))
 				return
 			}
 
 			steamSkins = append(steamSkins, entity.SteamItem{
-				HashName: hashName,
+				HashName: url.QueryEscape(hashName),
 				RuName:   ruName,
-				Cost:     cost,
-				Count:    count,
 				Link:     link,
+				ImgLink:  imgLink+"2x",
 			})
 		}
 
@@ -301,6 +369,7 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 		}
 
 		if stop == page {
+			close(ch)
 			return
 		} else {
 			page++
@@ -319,6 +388,6 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 		}
 		start = end
 
-		steam_helper.SleepRandom(4000, 6000)
+		steam_helper.SleepRandom(2000, 4000)
 	}
 }

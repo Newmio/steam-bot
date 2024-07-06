@@ -3,18 +3,13 @@ package entity
 import "time"
 
 type CheckItem struct {
-	Sell    []CheckOffer
-	Buy     []CheckOffer
-	History []SaleHistory
+	HashName string
+	Sell     map[int]int
+	Buy      map[int]int
 }
 
 type SaleHistory struct {
-	Date time.Time
-	Cost int
-	Count int
-}
-
-type CheckOffer struct {
+	Date  time.Time
 	Cost  int
 	Count int
 }

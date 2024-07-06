@@ -26,3 +26,13 @@ func NewSteam(r reposelenium.ISelenium, db repodb.IDatabase, market entity.Marke
 func (s *steam) Ping(url string) (string, error) {
 	return s.r.Ping(url)
 }
+
+func (s *steam) getAppId(game string)string{
+	switch game {
+	case "csgo":
+		return "730"
+
+	default:
+		return "error"
+	}
+}

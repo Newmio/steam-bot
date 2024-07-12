@@ -9,7 +9,7 @@ import (
 
 func OpenDb() (*redis.ClusterClient, error) {
 	v := viper.New()
-	v.AddConfigPath("internal/app/storage/redis")
+	v.AddConfigPath("internal/configs/redis")
 	v.SetConfigName("config")
 
 	err := v.ReadInConfig()

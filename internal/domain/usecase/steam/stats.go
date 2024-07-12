@@ -16,17 +16,17 @@ func (s *steam) GetHistoryItems(game string, start, stop int) {
 func (s *steam) CheckTradeItems(game string, start, stop int) error {
 	ch := make(steam_helper.CursorCh[entity.CheckItem])
 
-	// hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
-	// if err != nil {
-	// 	return steam_helper.Trace(err)
-	// }
+	hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
+	if err != nil {
+		return steam_helper.Trace(err)
+	}
 
-	// links, err := s.db.GetLinkSteamItems(hashNames, game)
-	// if err != nil {
-	// 	return steam_helper.Trace(err)
-	// }
+	links, err := s.db.GetLinkSteamItems(hashNames, game)
+	if err != nil {
+		return steam_helper.Trace(err)
+	}
 
-	go s.r.CheckTradeItems([]string{"https://steamcommunity.com/market/listings/730/StatTrak™%20SCAR-20%20%7C%20Outbreak%20(Battle-Scarred)"}, ch)
+	go s.r.CheckTradeItems(links, ch)
 
 	for {
 		select {
@@ -37,14 +37,6 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 			}
 			if item.Error != nil {
 				return steam_helper.Trace(item.Error)
-			}
-
-			for key, value := range item.Model.Buy {
-				fmt.Println(key, value)
-			}
-
-			for key, value := range item.Model.Sell {
-				fmt.Println(key, value)
 			}
 
 			maxBuy, minSell := 0.0, math.MaxFloat64

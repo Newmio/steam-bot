@@ -3,6 +3,7 @@ package app
 import (
 	"archive/zip"
 	"bot/internal/configs/bot"
+	"bot/internal/configs/redis"
 	"bot/internal/configs/sqlite"
 	"bot/internal/domain/usecase"
 	usecasedmarket "bot/internal/domain/usecase/dmarket"
@@ -29,22 +30,22 @@ func Init() {
 		panic(err)
 	}
 
-	// redis, err := redis.OpenDb()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	redis, err := redis.OpenDb()
+	if err != nil {
+		panic(err)
+	}
 
 	if err := buildProxyExtension(botConfig.Bot.SteamUser.Proxy[0].Ip, botConfig.Bot.SteamUser.Proxy[0].Port,
 		botConfig.Bot.SteamUser.Proxy[0].Login, botConfig.Bot.SteamUser.Proxy[0].Password); err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
 	if err := buildDeleteHeadersExtension(); err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
 	seleniumRepo := reposelenium.NewSelenium(botConfig.Bot.SteamUser)
-	repoRedis := reporedis.NewRedis(nil)
+	repoRedis := reporedis.NewRedis(redis)
 	repoSqlite := reposqlite.NewSqlite(sqlite)
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo, botConfig.Markets["steam"])

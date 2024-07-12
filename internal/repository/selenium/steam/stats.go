@@ -320,7 +320,7 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 				return
 			}
 
-			imgLinkElement, err := hashNameElement.FindElement(selenium.ByCSSSelector, ".result_1_image")
+			imgLinkElement, err := hashNameElement.FindElement(selenium.ByTagName, "img")
 			if err != nil {
 				ch.WriteError(context.Background(), steam_helper.Trace(err, hashNameElement))
 				return

@@ -22,7 +22,7 @@ func (h *handler) InitRoutes(e *echo.Echo) {
 
 	synch := e.Group("/synch")
 	{
-		synch.GET("/csgo", h.synchItems)
+		synch.GET("/items", h.synchItems)
 	}
 
 	check := e.Group("/check")

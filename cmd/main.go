@@ -26,7 +26,7 @@ redis-cli --cluster create \
     172.38.0.14:6379 \
     172.38.0.15:6379 \
     172.38.0.16:6379 \
-    --cluster-replicas 1 -a yourpassword
+    --cluster-replicas 1 --cluster-yes -a yourpassword
 */
 
 /*

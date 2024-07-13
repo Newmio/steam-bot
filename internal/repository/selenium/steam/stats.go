@@ -388,6 +388,6 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 		}
 		start = end
 
-		steam_helper.SleepRandom(2000, 4000)
+		steam_helper.SleepRandom(3000, 5000)
 	}
 }

@@ -16,20 +16,20 @@ func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, err
 		return "", steam_helper.Trace(err)
 	}
 
-	steam_helper.SleepRandom(5000, 6000)
+	steam_helper.SleepRandom(10000, 15000)
 
 	cookieMsg, err := wd.FindElement(selenium.ByCSSSelector, ".btn_blue_steamui.btn_medium.replyButton")
 	if err != nil {
 		haveCookie = false
 	}
 
-	inputs, err := wd.FindElements(selenium.ByCSSSelector, "._2eKVn6g5Yysx9JmutQe7WV")
+	inputs, err := wd.FindElements(selenium.ByCSSSelector, "._2GBWeup5cttgbTw8FM3tfx")
 	if err != nil {
 		fmt.Println(err)
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	loginBtn, err := wd.FindElement(selenium.ByCSSSelector, "._2QgFEj17t677s3x299PNJQ")
+	loginBtn, err := wd.FindElement(selenium.ByCSSSelector, ".DjSvCZoKKfoNSmarsEcTS")
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}

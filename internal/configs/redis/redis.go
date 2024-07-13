@@ -23,7 +23,7 @@ func OpenDb() (*redis.ClusterClient, error) {
 func initDb(pass string, hosts []string) (*redis.ClusterClient, error) {
 	client := redis.NewClusterClient(&redis.ClusterOptions{
 		Addrs:    hosts,
-		//Password: pass,
+		Password: pass,
 	})
 
 	_, err := client.Ping(context.Background()).Result()

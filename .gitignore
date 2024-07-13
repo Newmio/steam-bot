@@ -2,6 +2,7 @@ TODO
 bot.db
 .DS_Store
 internal/configs/bot/bot.json
+internal/configs/redis/config.yml
 database
 proxy_auth_plugin.zip
 delete_headers_plugin.zip

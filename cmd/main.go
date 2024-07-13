@@ -20,12 +20,12 @@ docker volume rm $(docker volume ls -q)
 
 /*
 redis-cli --cluster create \
-    172.38.0.11:6379 \
-    172.38.0.12:6379 \
-    172.38.0.13:6379 \
-    172.38.0.14:6379 \
-    172.38.0.15:6379 \
-    172.38.0.16:6379 \
+    localhost:7001 \
+    localhost:7002 \
+    localhost:7003 \
+    localhost:7004 \
+    localhost:7005 \
+    localhost:7006 \
     --cluster-replicas 1 --cluster-yes -a yourpassword
 */
 

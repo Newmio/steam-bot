@@ -27,6 +27,10 @@ func (db *redisRepo) GetSteamSellHistory(hashName, game string) (entity.SteamSel
 		respModel[key] = value
 	}
 
+	if len(respModel) == 0 {
+		return history, nil
+	}
+
 	for i := range int(respModel["countPrices"].(float64)) {
 		resp, err := db.db.HGetAll(context.Background(), fmt.Sprintf("steam_%s_sell_history:%s[%d]", game, hashName, i)).Result()
 		if err != nil {

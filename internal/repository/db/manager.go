@@ -4,6 +4,7 @@ import (
 	"bot/internal/domain/entity"
 	reporedis "bot/internal/repository/db/redis"
 	reposqlite "bot/internal/repository/db/sqlite"
+	"time"
 )
 
 type IDatabase interface {
@@ -12,8 +13,11 @@ type IDatabase interface {
 	CreateSteamItems(items []entity.SteamItem, game string) error
 	GetHashSteamItems(game string, start, stop int64) ([]string, error)
 	GetLinkSteamItems(hashNames []string, game string) ([]string, error)
+	// history передавать только по одному предмету
 	CreateSteamSellHistory(history []entity.SteamSellHistory, game string) error
-	GetSteamSellHistory(hashName, game string) (entity.SteamSellHistory, error)
+	// lastDay - за сколько дней от нынешнего времени выдать историю продаж
+	// если lastDay = 0 - то выдать все
+	GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error)
 	CreateForSteamTrade(hashName string) error
 }
 
@@ -26,22 +30,24 @@ func NewDatabase(redis reporedis.IRedis, sqlite reposqlite.ISqlite) IDatabase {
 	return &database{redis: redis, sqlite: sqlite}
 }
 
-func (db database) CreateForSteamTrade(hashName string) error{
+func (db database) CreateForSteamTrade(hashName string) error {
 	return db.redis.CreateForSteamTrade(hashName)
 }
 
-func (db *database) GetSteamSellHistory(hashName, game string) (entity.SteamSellHistory, error) {
-	return db.redis.GetSteamSellHistory(hashName, game)
+func (db *database) GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error) {
+	return db.redis.GetSteamSellHistory(hashName, game, lastDay)
 }
 
 func (db *database) CreateSteamSellHistory(history []entity.SteamSellHistory, game string) error {
-	for iH := range history {
+	var newHist []entity.SteamSellHistory
 
-		for i, j := 0, len(history[iH].Prices)-1; i < j; i, j = i+1, j-1 {
-			history[iH].Prices[i], history[iH].Prices[j] = history[iH].Prices[j], history[iH].Prices[i]
+	for iH := range history {
+		if time.Since(history[iH].Price.DateTime) <= time.Hour*24*365 {
+			newHist = append(newHist, history[iH])
 		}
 	}
-	return db.redis.CreateSteamSellHistory(history, game)
+
+	return db.redis.CreateSteamSellHistory(newHist, game)
 }
 
 func (db *database) GetLinkSteamItems(hashNames []string, game string) ([]string, error) {

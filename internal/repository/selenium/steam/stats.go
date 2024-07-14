@@ -17,7 +17,7 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.SteamSellHistory]) {
+func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory]) {
 	var resp map[string]interface{}
 
 	for _, link := range links {
@@ -43,11 +43,11 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 			return
 		}
 
-		var prices []entity.SteamItemPrice
+		var history []entity.SteamSellHistory
 
-		for _, value := range resp["prices"].([]interface{}){
+		for _, value := range resp["prices"].([]interface{}) {
 			value2 := value.([]interface{})
-			
+
 			dateTime, err := time.Parse("Jan 02 2006 15:04", strings.Replace(value2[0].(string), " +0", "00", -1))
 			if err != nil {
 				ch.WriteError(context.Background(), steam_helper.Trace(err))
@@ -62,19 +62,17 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 				return
 			}
 
-			prices = append(prices, entity.SteamItemPrice{
-				DateTime: dateTime,
-				Cost: cost,
-				Count: count,
+			history = append(history, entity.SteamSellHistory{
+				PriceSuffix: resp["price_suffix"].(string),
+				Price: entity.SteamItemPrice{
+					DateTime: dateTime,
+					Cost:     cost,
+					Count:    count,
+				},
 			})
 		}
 
-		steamSellHistory := entity.SteamSellHistory{
-			PriceSuffix: resp["price_suffix"].(string),
-			Prices: prices,
-		}
-
-		ch.WriteModel(context.Background(), steamSellHistory)
+		ch.WriteModel(context.Background(), history)
 	}
 	close(ch)
 }
@@ -159,13 +157,18 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 			return
 		}
 
+		itemsBuy := make(map[string]string)
+
+	restartSearch:
+
 		orderElements, err := table.FindElements(selenium.ByTagName, "tr")
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, table))
-			return
+			if !strings.Contains(err.Error(), steam_helper.ERROR_NO_SUCH_ELEMENT_IN_FRAME) {
+				ch.WriteError(context.Background(), steam_helper.Trace(err, table))
+				return
+			}
+			goto restartSearch
 		}
-
-		itemsBuy := make(map[string]string)
 
 		for i, orderElement := range orderElements {
 			if i == 0 {
@@ -174,20 +177,29 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 
 			order, err := orderElement.FindElements(selenium.ByTagName, "td")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, orderElement))
-				return
+				if !strings.Contains(err.Error(), steam_helper.ERROR_NO_SUCH_ELEMENT_IN_FRAME) {
+					ch.WriteError(context.Background(), steam_helper.Trace(err, orderElement))
+					return
+				}
+				goto restartSearch
 			}
 
 			costStr, err := order[0].Text()
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, order[0]))
-				return
+				if !strings.Contains(err.Error(), steam_helper.ERROR_NO_SUCH_ELEMENT_IN_FRAME) {
+					ch.WriteError(context.Background(), steam_helper.Trace(err, order[0]))
+					return
+				}
+				goto restartSearch
 			}
 
 			countStr, err := order[1].Text()
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, order[1]))
-				return
+				if !strings.Contains(err.Error(), steam_helper.ERROR_NO_SUCH_ELEMENT_IN_FRAME) {
+					ch.WriteError(context.Background(), steam_helper.Trace(err, order[1]))
+					return
+				}
+				goto restartSearch
 			}
 
 			itemsBuy[costStr] = countStr
@@ -215,7 +227,7 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 
 			if strings.Contains(cost, ",") {
 				sell[costInt]++
-			}else{
+			} else {
 				sell[costInt*100]++
 			}
 		}
@@ -237,7 +249,7 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 
 			if strings.Contains(cost, ",") {
 				buy[costInt] = countInt
-			}else{
+			} else {
 				buy[costInt*100] = countInt
 			}
 		}
@@ -246,8 +258,8 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 
 		checkItem := entity.CheckItem{
 			HashName: hashName[len(hashName)-1],
-			Sell: sell,
-			Buy:  buy,
+			Sell:     sell,
+			Buy:      buy,
 		}
 
 		ch.WriteModel(context.Background(), checkItem)
@@ -336,7 +348,7 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 				HashName: url.QueryEscape(hashName),
 				RuName:   ruName,
 				Link:     link,
-				ImgLink:  imgLink+"2x",
+				ImgLink:  imgLink + "2x",
 			})
 		}
 

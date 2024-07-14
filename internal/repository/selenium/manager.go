@@ -21,8 +21,8 @@ type ISelenium interface {
 	SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem])
 	Ping(url string) (string, error)
 	CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem])
-	GetHistoryItems(links []string, ch steam_helper.CursorCh[entity.SteamSellHistory])
-	GetHistoryItem(link string) (entity.SteamSellHistory, error)
+	GetHistoryItems(links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory])
+	GetHistoryItem(link string) ([]entity.SteamSellHistory, error)
 }
 
 type seleniumRepo struct {
@@ -53,12 +53,12 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
-func (r *seleniumRepo) GetHistoryItem(link string) (entity.SteamSellHistory, error) {
-	ch := make(steam_helper.CursorCh[entity.SteamSellHistory])
+func (r *seleniumRepo) GetHistoryItem(link string) ([]entity.SteamSellHistory, error) {
+	ch := make(steam_helper.CursorCh[[]entity.SteamSellHistory])
 
 	wd, err := r.getDriver("steam")
 	if err != nil {
-		return entity.SteamSellHistory{}, steam_helper.Trace(err)
+		return nil, steam_helper.Trace(err)
 	}
 
 	go r.steam.GetHistoryItems(wd, []string{link}, ch)
@@ -66,20 +66,20 @@ func (r *seleniumRepo) GetHistoryItem(link string) (entity.SteamSellHistory, err
 	select {
 	case history, ok := <-ch:
 		if !ok {
-			return entity.SteamSellHistory{}, nil
+			return nil, nil
 		}
 		if history.Error != nil {
-			return entity.SteamSellHistory{}, steam_helper.Trace(history.Error)
+			return nil, steam_helper.Trace(history.Error)
 		}
 
 		return history.Model, nil
 
 	case <-time.After(time.Minute):
-		return entity.SteamSellHistory{}, steam_helper.Trace(fmt.Errorf("timeout"))
+		return nil, steam_helper.Trace(fmt.Errorf("timeout"))
 	}
 }
 
-func (r *seleniumRepo) GetHistoryItems(links []string, ch steam_helper.CursorCh[entity.SteamSellHistory]) {
+func (r *seleniumRepo) GetHistoryItems(links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory]) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
 		ch.WriteError(context.Background(), steam_helper.Trace(err))

@@ -12,7 +12,7 @@ type IRedis interface {
 	GetHashSteamItems(game string, start, stop int64) ([]string, error)
 	GetLinkSteamItems(hashNames []string, game string) ([]string, error)
 	CreateSteamSellHistory(history []entity.SteamSellHistory, game string) error
-	GetSteamSellHistory(hashName, game string) (entity.SteamSellHistory, error)
+	GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error)
 	CreateForSteamTrade(hashName string) error
 }
 

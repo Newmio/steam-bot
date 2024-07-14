@@ -5,7 +5,7 @@ import "time"
 type SteamSellHistory struct {
 	HashName    string
 	PriceSuffix string
-	Prices      []SteamItemPrice
+	Price      SteamItemPrice
 }
 
 type SteamItemPrice struct {

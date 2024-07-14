@@ -56,12 +56,12 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 			}
 
 			if ((minSell-maxBuy)/maxBuy)*100 > 1.5 { // если процент прибыли больше 1.5%
-				history, err := s.db.GetSteamSellHistory(item.Model.HashName, game)
+				history, err := s.db.GetSteamSellHistory(item.Model.HashName, game, 2)
 				if err != nil {
 					return steam_helper.Trace(err)
 				}
 
-				if len(history.Prices) == 0 || time.Since(history.Prices[0].DateTime) >= time.Hour { // если в истории с редиса дата последней покупки старее на 1 час от нынешнего времени
+				if len(history) == 0 || time.Since(history[len(history)-1].Price.DateTime) >= time.Hour { // если в истории с редиса дата последней покупки старее на 1 час от нынешнего времени
 					historyUrl := fmt.Sprintf("https://steamcommunity.com/market/pricehistory/?appid=%s&market_hash_name=%s",
 						s.getAppId(game), item.Model.HashName)
 
@@ -70,27 +70,31 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 						return steam_helper.Trace(err)
 					}
 
-					if err := s.db.CreateSteamSellHistory([]entity.SteamSellHistory{history}, game); err != nil {
+					for i := range history {
+						history[i].HashName = item.Model.HashName
+					}
+
+					if err := s.db.CreateSteamSellHistory(history, game); err != nil {
 						return steam_helper.Trace(err)
 					}
 				}
 
 				var sellsCount int
 
-				for _, value := range history.Prices { // считает колво продаж за последние 2 дня
-					if time.Since(value.DateTime) <= time.Hour*25*2 {
-						sellsCount += value.Count
+				for _, value := range history { // считает колво продаж за последние 2 дня
+					if time.Since(value.Price.DateTime) <= time.Hour*25*2 {
+						sellsCount += value.Price.Count
 					}
 				}
 
-				if sellsCount > 50 { //если продаж больше 50
+				if sellsCount > 30 { //если продаж больше 30
 					if err := s.db.CreateForSteamTrade(item.Model.HashName); err != nil {
 						return steam_helper.Trace(err)
 					}
 				}
 			}
 
-		case <-time.After(time.Minute):
+		case <-time.After(time.Minute * 3):
 			return steam_helper.Trace(fmt.Errorf("timeout"))
 		}
 	}
@@ -126,7 +130,7 @@ func (s *steam) SynchItems(game string) error {
 				return steam_helper.Trace(err)
 			}
 
-		case <-time.After(time.Minute):
+		case <-time.After(time.Minute * 2):
 			return steam_helper.Trace(fmt.Errorf("timeout"))
 		}
 	}

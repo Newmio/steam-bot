@@ -16,17 +16,17 @@ func (s *steam) GetHistoryItems(game string, start, stop int) {
 func (s *steam) CheckTradeItems(game string, start, stop int) error {
 	ch := make(steam_helper.CursorCh[entity.CheckItem])
 
-	hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
-	if err != nil {
-		return steam_helper.Trace(err)
-	}
+	// hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
+	// if err != nil {
+	// 	return steam_helper.Trace(err)
+	// }
 
-	links, err := s.db.GetLinkSteamItems(hashNames, game)
-	if err != nil {
-		return steam_helper.Trace(err)
-	}
+	// links, err := s.db.GetLinkSteamItems(hashNames, game)
+	// if err != nil {
+	// 	return steam_helper.Trace(err)
+	// }
 
-	go s.r.CheckTradeItems(links, ch)
+	go s.r.CheckTradeItems([]string{"https://steamcommunity.com/market/listings/730/Nova%20%7C%20Gila%20(Field-Tested)"}, ch)
 
 	for {
 		select {
@@ -55,7 +55,7 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 				}
 			}
 
-			if ((minSell-maxBuy)/maxBuy)*100 > 3 { // если процент прибыли больше 3%
+			if ((minSell-maxBuy)/maxBuy)*100 > 1.5 { // если процент прибыли больше 1.5%
 				history, err := s.db.GetSteamSellHistory(item.Model.HashName, game)
 				if err != nil {
 					return steam_helper.Trace(err)

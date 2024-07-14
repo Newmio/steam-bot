@@ -15,16 +15,26 @@ func (db *redisRepo) CreateForSteamTrade(hashName string) error {
 
 func (db *redisRepo) GetSteamSellHistory(hashName, game string) (entity.SteamSellHistory, error) {
 	var history entity.SteamSellHistory
-	var respModel map[string]interface{}
-	var respPrices map[string]interface{}
+	respModel := make(map[string]interface{})
+	respPrices := make(map[string]interface{})
 
-	if err := db.db.HGetAll(context.Background(), fmt.Sprintf("steam_%s_sell_history:%s", game, hashName)).Scan(&respModel); err != nil {
+	resp, err := db.db.HGetAll(context.Background(), fmt.Sprintf("steam_%s_sell_history:%s", game, hashName)).Result()
+	if err != nil {
 		return history, steam_helper.Trace(err)
 	}
 
+	for key, value := range resp {
+		respModel[key] = value
+	}
+
 	for i := range int(respModel["countPrices"].(float64)) {
-		if err := db.db.HGetAll(context.Background(), fmt.Sprintf("steam_%s_sell_history:%s[%d]", game, hashName, i)).Scan(&respPrices); err != nil {
+		resp, err := db.db.HGetAll(context.Background(), fmt.Sprintf("steam_%s_sell_history:%s[%d]", game, hashName, i)).Result()
+		if err != nil {
 			return history, steam_helper.Trace(err)
+		}
+
+		for key, value := range resp {
+			respPrices[key] = value
 		}
 
 		date, err := steam_helper.TimeParse(respPrices["DateTime"].(string))

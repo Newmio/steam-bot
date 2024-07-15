@@ -2,7 +2,16 @@ package entity
 
 import (
 	"time"
+
+	"github.com/Newmio/steam_helper"
 )
+
+type PaginationInfo[T any] struct{
+	Game string
+	Start int
+	Stop int
+	Ch steam_helper.CursorCh[T]
+}
 
 type Bot struct {
 	SteamUser SteamUser `json:"steam_user"`

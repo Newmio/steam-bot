@@ -8,7 +8,7 @@ import (
 
 type ISteam interface {
 	SteamAuth() error
-	SynchItems(game string) error
+	SynchItems(info entity.PaginationInfo[[]entity.SteamItem]) error
 	Ping(url string) (string, error)
 	CheckTradeItems(game string, start, stop int) error
 }

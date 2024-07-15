@@ -4,6 +4,8 @@ import (
 	"bot/internal/domain/entity"
 	usecasedmarket "bot/internal/domain/usecase/dmarket"
 	usecasesteam "bot/internal/domain/usecase/steam"
+
+	"github.com/Newmio/steam_helper"
 )
 
 type IUseCase interface {
@@ -28,7 +30,14 @@ func (s *useCase) CheckTradeItems(game string, start, stop int) error {
 }
 
 func (s *useCase) SynchItems(game string) error {
-	return s.steam.SynchItems(game)
+	ch := make(steam_helper.CursorCh[[]entity.SteamItem])
+	info := entity.PaginationInfo[[]entity.SteamItem]{
+		Game:  game,
+		Start: 1,
+		Stop:  100,
+		Ch:    ch,
+	}
+	return s.steam.SynchItems(info)
 }
 
 func (s *useCase) SteamAuth() error {

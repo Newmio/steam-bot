@@ -269,17 +269,17 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 	close(ch)
 }
 
-func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.CursorCh[[]entity.SteamItem]) {
+func (r *steam) SynchItems(wd selenium.WebDriver, info entity.PaginationInfo[[]entity.SteamItem]) {
 	var reqUrl string
 	page, stop := 1, 0
 
-	switch game {
+	switch info.Game {
 	case "csgo":
-		reqUrl = "https://steamcommunity.com/market/search?appid=730#p1_popular_desc"
+		reqUrl = fmt.Sprintf("https://steamcommunity.com/market/search?appid=730#p%d_popular_desc", info.Start)
 	}
 
 	if err := wd.Get(reqUrl); err != nil {
-		ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+		info.Ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 		return
 	}
 
@@ -287,7 +287,7 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 
 	start, err := steam_helper.GetStartMousePosition(wd)
 	if err != nil {
-		ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+		info.Ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 		return
 	}
 
@@ -296,7 +296,7 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 
 		skins, err := wd.FindElements(selenium.ByCSSSelector, ".market_listing_row_link")
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 			return
 		}
 
@@ -304,43 +304,43 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 
 			hashNameElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_row.market_recent_listing_row.market_listing_searchresult")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
 				return
 			}
 
 			hashName, err := hashNameElement.GetAttribute("data-hash-name")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, hashNameElement))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, hashNameElement))
 				return
 			}
 
 			ruNameElement, err := skin.FindElement(selenium.ByCSSSelector, ".market_listing_item_name")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
 				return
 			}
 
 			ruName, err := ruNameElement.Text()
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, ruNameElement))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, ruNameElement))
 				return
 			}
 
 			link, err := skin.GetAttribute("href")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, skin))
 				return
 			}
 
 			imgLinkElement, err := hashNameElement.FindElement(selenium.ByTagName, "img")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, hashNameElement))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, hashNameElement))
 				return
 			}
 
 			imgLink, err := imgLinkElement.GetAttribute("src")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, imgLinkElement))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, imgLinkElement))
 				return
 			}
 
@@ -352,25 +352,25 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 			})
 		}
 
-		ch.WriteModel(context.Background(), steamSkins)
+		info.Ch.WriteModel(context.Background(), steamSkins)
 
 		if page == 0 {
 			stopPages, err := wd.FindElements(selenium.ByCSSSelector, ".market_paging_pagelink")
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 				return
 			}
 
 			for _, value := range stopPages {
 				p, err := value.Text()
 				if err != nil {
-					ch.WriteError(context.Background(), steam_helper.Trace(err, value))
+					info.Ch.WriteError(context.Background(), steam_helper.Trace(err, value))
 					return
 				}
 
 				intP, err := strconv.Atoi(p)
 				if err != nil {
-					ch.WriteError(context.Background(), steam_helper.Trace(err))
+					info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 					return
 				}
 
@@ -380,8 +380,8 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 			}
 		}
 
-		if stop == page {
-			close(ch)
+		if page == stop || page == info.Stop{
+			close(info.Ch)
 			return
 		} else {
 			page++
@@ -389,13 +389,13 @@ func (r *steam) SynchItems(wd selenium.WebDriver, game string, ch steam_helper.C
 
 		nextBtn, err := wd.FindElements(selenium.ByCSSSelector, ".pagebtn")
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 			return
 		}
 
 		end, err := steam_helper.MoveMouseAndClick(wd, nextBtn[1], start)
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, nextBtn))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err, nextBtn))
 			return
 		}
 		start = end

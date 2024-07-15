@@ -18,7 +18,7 @@ import (
 
 type ISelenium interface {
 	SteamLogin() error
-	SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem])
+	SynchItems(info entity.PaginationInfo[[]entity.SteamItem])
 	Ping(url string) (string, error)
 	CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem])
 	GetHistoryItems(links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory])
@@ -99,14 +99,14 @@ func (r *seleniumRepo) CheckTradeItems(links []string, ch steam_helper.CursorCh[
 	r.steam.CheckTradeItems(wd, links, ch)
 }
 
-func (r *seleniumRepo) SynchItems(game string, ch steam_helper.CursorCh[[]entity.SteamItem]) {
+func (r *seleniumRepo) SynchItems(info entity.PaginationInfo[[]entity.SteamItem]) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
-		ch.WriteError(context.Background(), steam_helper.Trace(err))
+		info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 		return
 	}
 
-	r.steam.SynchItems(wd, game, ch)
+	r.steam.SynchItems(wd, info)
 }
 
 func (r *seleniumRepo) SteamLogin() error {

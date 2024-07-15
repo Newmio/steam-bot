@@ -11,11 +11,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func (db *redisRepo) CreateForSteamTrade(hashName string) error {
-	return db.db.ZAdd(context.Background(), "for_trade_steam", redis.Z{Score: 0, Member: hashName}).Err()
+func (db *redisRepo) CreateForSteamTrade(hashName string, profit float64) error {
+	return db.db.ZAdd(context.Background(), "for_steam_trade", redis.Z{Score: profit, Member: hashName}).Err()
 }
 
-// lastDay - за сколько дней от нынешнего времени выдать историю продаж
 func (db *redisRepo) GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error) {
 	var history []entity.SteamSellHistory
 	t := time.Now()
@@ -69,16 +68,12 @@ func (db *redisRepo) CreateSteamSellHistory(history []entity.SteamSellHistory, g
 			return steam_helper.Trace(err)
 		}
 
-		fmt.Println("---- 1 len", len(history))
-
 		for i := len(history) - 1; i >= 0; i-- {
 			if !history[i].Price.DateTime.After(historyItem.Price.DateTime) {
 				history = history[i+1:]
 				break
 			}
 		}
-
-		fmt.Println("---- 2 len", len(history))
 	}
 
 	for _, value := range history {

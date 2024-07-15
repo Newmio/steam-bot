@@ -13,7 +13,7 @@ type IRedis interface {
 	GetLinkSteamItems(hashNames []string, game string) ([]string, error)
 	CreateSteamSellHistory(history []entity.SteamSellHistory, game string) error
 	GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error)
-	CreateForSteamTrade(hashName string) error
+	CreateForSteamTrade(hashName string, profit float64) error
 }
 
 type redisRepo struct {

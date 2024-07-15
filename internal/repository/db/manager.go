@@ -18,7 +18,7 @@ type IDatabase interface {
 	// lastDay - за сколько дней от нынешнего времени выдать историю продаж
 	// если lastDay = 0 - то выдать все
 	GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error)
-	CreateForSteamTrade(hashName string) error
+	CreateForSteamTrade(hashName string, profit float64) error
 }
 
 type database struct {
@@ -30,8 +30,8 @@ func NewDatabase(redis reporedis.IRedis, sqlite reposqlite.ISqlite) IDatabase {
 	return &database{redis: redis, sqlite: sqlite}
 }
 
-func (db database) CreateForSteamTrade(hashName string) error {
-	return db.redis.CreateForSteamTrade(hashName)
+func (db database) CreateForSteamTrade(hashName string, profit float64) error {
+	return db.redis.CreateForSteamTrade(hashName, profit)
 }
 
 func (db *database) GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error) {

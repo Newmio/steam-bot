@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bot/internal/configs/bot"
 	"bot/internal/configs/redis"
+	"bot/internal/configs/sqlite"
 	"bot/internal/domain/usecase"
 	usecasedmarket "bot/internal/domain/usecase/dmarket"
 	usecasesteam "bot/internal/domain/usecase/steam"
@@ -24,10 +25,10 @@ func Init() {
 	e := echo.New()
 	botConfig := bot.Init()
 
-	// sqlite, err := sqlite.OpenDb(botConfig.Bot.SteamUser.Login)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	sqlite, err := sqlite.OpenDb(botConfig.Bot.SteamUser.Login)
+	if err != nil {
+		panic(err)
+	}
 
 	redis, err := redis.OpenDb()
 	if err != nil {
@@ -45,7 +46,7 @@ func Init() {
 
 	seleniumRepo := reposelenium.NewSelenium(botConfig.Bot.SteamUser)
 	repoRedis := reporedis.NewRedis(redis)
-	repoSqlite := reposqlite.NewSqlite(nil)
+	repoSqlite := reposqlite.NewSqlite(sqlite)
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo, botConfig.Markets["steam"])
 	dmarketUsecase := usecasedmarket.NewDmarket(seleniumRepo, dbRepo)

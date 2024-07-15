@@ -1,26 +1,26 @@
 package entity
 
 import (
+	"sync"
 	"time"
 
 	"github.com/Newmio/steam_helper"
 )
 
-type PaginationInfo[T any] struct{
-	Game string
+type PaginationInfo[T any] struct {
+	Game  string
 	Start int
-	Stop int
-	Ch steam_helper.CursorCh[T]
+	Stop  int
+	Ch    steam_helper.CursorCh[T]
 }
 
 type Bot struct {
-	SteamUser SteamUser `json:"steam_user"`
-	//Mu          sync.Mutex
-	Markets       map[string]Market `json:"markets"`
-	DateStopBot   time.Time         `json:"date_stop_bot"`
-	MaxSeleniumWd int               `json:"max_selenium_wd"`
-	IsBusy        bool
-	Windows       int
+	SteamUser   SteamUser `json:"steam_user"`
+	DateStopBot time.Time `json:"date_stop_bot"`
+	Synch       bool      `json:"synch"`
+	SynchStart  int       `json:"synch_start"`
+	SynchStop   int       `json:"synch_stop"`
+	Wg          *sync.WaitGroup
 }
 
 type Market struct {
@@ -89,18 +89,4 @@ type SteamUser struct {
 	Login       string  `json:"login"`
 	Password    string  `json:"password"`
 	Proxy       []proxy `json:"proxy"`
-}
-
-func (bot *Bot) CheckAction(marketName, action string) bool {
-
-	if bot.DateStopBot.After(time.Now()) && !bot.IsBusy {
-		//market := bot.Markets[marketName]
-
-		switch action {
-		default:
-			return true
-		}
-	}
-
-	return false
 }

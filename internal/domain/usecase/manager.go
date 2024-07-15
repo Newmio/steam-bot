@@ -36,6 +36,10 @@ func (s *useCase) CheckTradeItems(game string, start, stop int) error {
 }
 
 func (s *useCase) SynchItems(game string) error {
+	if !s.bot.Synch {
+		return nil
+	}
+	
 	s.bot.Wg.Wait()
 	s.bot.Wg.Add(1)
 	defer s.bot.Wg.Done()

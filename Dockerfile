@@ -41,7 +41,7 @@ RUN echo '#!/bin/sh\n\
 Xvfb :99 -screen 0 5120x2880x24 &\n\
 export DISPLAY=:99\n\
 chromedriver --port=9515 &\n\
-sleep \n\
+sleep 10 \n\
 /app/bot' > /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 

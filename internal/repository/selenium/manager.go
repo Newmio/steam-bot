@@ -9,6 +9,7 @@ import (
 
 	repocsmoney "bot/internal/repository/selenium/csmoney"
 	repodmarket "bot/internal/repository/selenium/dmarket"
+	repohelpers "bot/internal/repository/selenium/helpers"
 	reposteam "bot/internal/repository/selenium/steam"
 
 	"github.com/Newmio/steam_helper"
@@ -23,6 +24,7 @@ type ISelenium interface {
 	CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem])
 	GetHistoryItems(links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory])
 	GetHistoryItem(link string) ([]entity.SteamSellHistory, error)
+	GetLinksForTradeItem(game string) (map[string]float64, error)
 }
 
 type seleniumRepo struct {
@@ -31,6 +33,7 @@ type seleniumRepo struct {
 	steam   reposteam.ISteam
 	dmarket repodmarket.IDmarket
 	csmoney repocsmoney.ICsmoney
+	helpers repohelpers.IHelpers
 	mu      sync.Mutex
 }
 
@@ -45,12 +48,22 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 
 	return &seleniumRepo{
+		helpers: repohelpers.NewHelpers(),
 		csmoney: repocsmoney.NewCsmoney(),
 		dmarket: repodmarket.NewDmarket(),
 		steam:   reposteam.NewSteam(),
 		user:    user,
 		wd:      map[string]selenium.WebDriver{"steam": wd},
 	}
+}
+
+func (r *seleniumRepo) GetLinksForTradeItem(game string) (map[string]float64, error){
+	wd, err := r.getDriver("steam")
+	if err != nil {
+		return nil, steam_helper.Trace(err)
+	}
+
+	return r.helpers.GetLinksForTradeItem(wd, game)
 }
 
 func (r *seleniumRepo) GetHistoryItem(link string) ([]entity.SteamSellHistory, error) {
@@ -215,7 +228,7 @@ func createDriver() (selenium.WebDriver, error) {
 
 	chromeCaps.AddExtension("proxy_auth_plugin.zip")
 	chromeCaps.AddExtension("delete_headers_plugin.zip")
-	chromeCaps.AddExtension("JJICBEFPEMNPHINCCGIKPDAAGJEBBNHG_4_3_1_0.crx")
+	//chromeCaps.AddExtension("JJICBEFPEMNPHINCCGIKPDAAGJEBBNHG_4_3_1_0.crx")
 
 	script := `
     // Функция для генерации случайного целого числа в заданном диапазоне

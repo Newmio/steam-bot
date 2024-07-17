@@ -3,6 +3,7 @@ package usecase
 import (
 	"bot/internal/domain/entity"
 	usecasedmarket "bot/internal/domain/usecase/dmarket"
+	usecasehelpers "bot/internal/domain/usecase/helpers"
 	usecasesteam "bot/internal/domain/usecase/steam"
 	"sync"
 
@@ -14,17 +15,23 @@ type IUseCase interface {
 	SynchItems(game string) error
 	Ping(url string) (string, error)
 	CheckTradeItems(game string, start, stop int) error
+	GetLinksForTradeItem(game string) error
 }
 
 type useCase struct {
 	bot     entity.Bot
 	steam   usecasesteam.ISteam
 	dmarket usecasedmarket.IDmarket
+	helpers usecasehelpers.IHelpers
 }
 
-func NewUseCase(steam usecasesteam.ISteam, dmarket usecasedmarket.IDmarket, bot entity.Bot) IUseCase {
+func NewUseCase(steam usecasesteam.ISteam, dmarket usecasedmarket.IDmarket, helpers usecasehelpers.IHelpers, bot entity.Bot) IUseCase {
 	bot.Wg = new(sync.WaitGroup)
-	return &useCase{bot: bot, steam: steam, dmarket: dmarket}
+	return &useCase{bot: bot, steam: steam, dmarket: dmarket, helpers: helpers}
+}
+
+func (s *useCase) GetLinksForTradeItem(game string) error{
+	return s.helpers.GetLinksForTradeItem(game)
 }
 
 func (s *useCase) CheckTradeItems(game string, start, stop int) error {

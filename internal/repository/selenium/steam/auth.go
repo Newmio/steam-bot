@@ -61,14 +61,9 @@ func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, err
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	steam_helper.SleepRandom(5000, 6000)
+	steam_helper.SleepRandom(6000, 8000)
 
-	profile, err := wd.FindElement(selenium.ByCSSSelector, ".user_avatar.playerAvatar.offline")
-	if err != nil {
-		return "", steam_helper.Trace(err, wd)
-	}
-
-	link, err := profile.GetAttribute("href")
+	link, err := wd.CurrentURL()
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
@@ -77,5 +72,5 @@ func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, err
 		return "", steam_helper.Trace(fmt.Errorf("auth error"), wd)
 	}
 
-	return link, nil
+	return strings.Replace(link, "/home", "", -1), nil
 }

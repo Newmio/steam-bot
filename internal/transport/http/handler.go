@@ -19,6 +19,7 @@ func NewHandler(s usecase.IUseCase) *handler {
 func (h *handler) InitRoutes(e *echo.Echo) {
 	e.POST("/ping", h.ping)
 	e.GET("/login", h.login)
+	e.GET("/test", h.test)
 
 	synch := e.Group("/synch")
 	{
@@ -32,6 +33,20 @@ func (h *handler) InitRoutes(e *echo.Echo) {
 			items.GET("/steam", h.checkTradeItems)
 		}
 	}
+}
+
+func (h *handler) test(c echo.Context) error {
+	game := c.QueryParam("game")
+
+	if game == "" || len([]rune(game)) <= 3 {
+		return c.JSON(400, steam_helper.Trace(fmt.Errorf("game is empty")).Error())
+	}
+
+	if err := h.s.GetLinksForTradeItem(game); err != nil {
+		return c.JSON(500, steam_helper.Trace(err).Error())
+	}
+
+	return c.JSON(200, "ok")
 }
 
 func (h *handler) ping(c echo.Context) error {

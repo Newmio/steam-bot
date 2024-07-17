@@ -57,6 +57,11 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 
 			profit := ((minSell - maxBuy) / maxBuy) * 100
 
+			fmt.Println("-------------------------------------------")
+			fmt.Println("hashName", item.Model.HashName)
+			fmt.Println("profit", profit)
+			fmt.Println("-------------------------------------------")
+
 			if profit > 1.5 { // если процент прибыли больше 1.5%
 				history, err := s.db.GetSteamSellHistory(item.Model.HashName, game, 2)
 				if err != nil {
@@ -89,7 +94,7 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 					}
 				}
 
-				if sellsCount > 30 { //если продаж больше 30
+				if sellsCount > 80 { //если продаж больше 30
 					if err := s.db.CreateForSteamTrade(item.Model.HashName, profit); err != nil {
 						return steam_helper.Trace(err)
 					}

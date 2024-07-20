@@ -20,12 +20,16 @@ import (
 
 func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory]) {
 	var resp map[string]interface{}
+	var restartCount int
 
 	for _, link := range links {
+	start:
 		if err := wd.Get(link); err != nil {
 			ch.WriteError(context.Background(), steam_helper.Trace(err))
 			return
 		}
+
+		time.Sleep(2 * time.Second)
 
 		pre, err := wd.FindElement(selenium.ByTagName, "pre")
 		if err != nil {
@@ -42,6 +46,30 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 		if err := json.Unmarshal([]byte(body), &resp); err != nil {
 			ch.WriteError(context.Background(), steam_helper.Trace(err, body))
 			return
+		}
+
+		if len(resp) == 0 {
+			if _, err := r.ifTooManyRequests(wd); err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
+			}
+			restartCount++
+			if restartCount < 5 {
+				goto start
+			} else {
+				continue
+			}
+		}
+
+		switch resp["prices"].(type) {
+		case bool:
+			time.Sleep(time.Second)
+			restartCount++
+			if restartCount < 5 {
+				goto start
+			} else {
+				continue
+			}
 		}
 
 		var history []entity.SteamSellHistory
@@ -74,14 +102,18 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 		}
 
 		ch.WriteModel(context.Background(), history)
+		restartCount = 0
 	}
 	close(ch)
 }
 
 func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
+	var checkedBadLinks bool
+	var badLinks []string
 
+start:
 	for _, link := range links {
-		
+
 		if err := wd.Get(link); err != nil {
 			ch.WriteError(context.Background(), steam_helper.Trace(err))
 			return
@@ -93,6 +125,19 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 		if err != nil {
 			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 			return
+		}
+
+		if len(tables) == 0 {
+			flag, err := r.ifTooManyRequests(wd)
+			if err != nil {
+				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				return
+			}
+
+			if !flag {
+				badLinks = append(badLinks, link)
+			}
+			continue
 		}
 
 		var sell, buy map[int]int
@@ -141,6 +186,12 @@ func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_
 		ch.WriteModel(context.Background(), checkItem)
 
 		steam_helper.SleepRandom(1000, 2000)
+	}
+
+	if len(badLinks) > 0 && !checkedBadLinks {
+		checkedBadLinks = true
+		links = badLinks
+		goto start
 	}
 	close(ch)
 }

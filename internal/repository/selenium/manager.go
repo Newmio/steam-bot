@@ -29,6 +29,7 @@ type ISelenium interface {
 
 type seleniumRepo struct {
 	wd      map[string]selenium.WebDriver
+	wg      map[string]*sync.WaitGroup
 	user    entity.SteamUser
 	steam   reposteam.ISteam
 	dmarket repodmarket.IDmarket
@@ -41,27 +42,23 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	steam_helper.BuzierOffset = 200
 	steam_helper.BuzierSteps = 30
 
-	wd, err := createDriver()
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-
 	return &seleniumRepo{
 		helpers: repohelpers.NewHelpers(),
 		csmoney: repocsmoney.NewCsmoney(),
 		dmarket: repodmarket.NewDmarket(),
 		steam:   reposteam.NewSteam(),
 		user:    user,
-		wd:      map[string]selenium.WebDriver{"steam": wd},
+		wd:      make(map[string]selenium.WebDriver),
+		wg:      make(map[string]*sync.WaitGroup),
 	}
 }
 
-func (r *seleniumRepo) GetLinksForTradeItem(game string) (map[string]float64, error){
+func (r *seleniumRepo) GetLinksForTradeItem(game string) (map[string]float64, error) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
+	defer r.wg["steam"].Done()
 
 	return r.helpers.GetLinksForTradeItem(wd, game)
 }
@@ -69,10 +66,11 @@ func (r *seleniumRepo) GetLinksForTradeItem(game string) (map[string]float64, er
 func (r *seleniumRepo) GetHistoryItem(link string) ([]entity.SteamSellHistory, error) {
 	ch := make(steam_helper.CursorCh[[]entity.SteamSellHistory])
 
-	wd, err := r.getDriver("steam")
+	wd, err := r.getDriver("helpers")
 	if err != nil {
 		return nil, steam_helper.Trace(err)
 	}
+	defer r.wg["helpers"].Done()
 
 	go r.steam.GetHistoryItems(wd, []string{link}, ch)
 
@@ -98,6 +96,7 @@ func (r *seleniumRepo) GetHistoryItems(links []string, ch steam_helper.CursorCh[
 		ch.WriteError(context.Background(), steam_helper.Trace(err))
 		return
 	}
+	defer r.wg["steam"].Done()
 
 	r.steam.GetHistoryItems(wd, links, ch)
 }
@@ -108,6 +107,7 @@ func (r *seleniumRepo) CheckTradeItems(links []string, ch steam_helper.CursorCh[
 		ch.WriteError(context.Background(), steam_helper.Trace(err))
 		return
 	}
+	defer r.wg["steam"].Done()
 
 	r.steam.CheckTradeItems(wd, links, ch)
 }
@@ -118,6 +118,7 @@ func (r *seleniumRepo) SynchItems(info entity.PaginationInfo[[]entity.SteamItem]
 		info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 		return
 	}
+	defer r.wg["steam"].Done()
 
 	r.steam.SynchItems(wd, info)
 }
@@ -127,6 +128,7 @@ func (r *seleniumRepo) SteamLogin() error {
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
+	defer r.wg["steam"].Done()
 
 	_, err = r.steam.Login(wd, r.user)
 	if err != nil {
@@ -145,9 +147,16 @@ func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
 
 		r.mu.Lock()
 		r.wd[name] = wd
+		r.wg[name] = new(sync.WaitGroup)
 		r.mu.Unlock()
+
+		if _, err := r.steam.Login(wd, r.user); err != nil{
+			return nil, steam_helper.Trace(err)
+		}
 	}
 
+	r.wg[name].Wait()
+	r.wg[name].Add(1)
 	return r.wd[name], nil
 }
 

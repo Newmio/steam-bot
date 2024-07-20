@@ -1,8 +1,8 @@
 package usecasehelpers
 
 import (
+	repodb "bot/internal/repository/db"
 	reposelenium "bot/internal/repository/selenium"
-	"fmt"
 
 	"github.com/Newmio/steam_helper"
 )
@@ -12,11 +12,12 @@ type IHelpers interface {
 }
 
 type helpers struct {
-	r reposelenium.ISelenium
+	r  reposelenium.ISelenium
+	db repodb.IDatabase
 }
 
-func NewHelpers(r reposelenium.ISelenium) IHelpers {
-	return &helpers{r: r}
+func NewHelpers(r reposelenium.ISelenium, db repodb.IDatabase) IHelpers {
+	return &helpers{r: r, db: db}
 }
 
 func (s *helpers) GetLinksForTradeItem(game string) error {
@@ -25,8 +26,8 @@ func (s *helpers) GetLinksForTradeItem(game string) error {
 		return steam_helper.Trace(err)
 	}
 
-	for key, value := range links {
-		fmt.Println(key, ": ", value)
+	if err := s.db.CreateHelpersForSteamTrade(links); err != nil {
+		return steam_helper.Trace(err)
 	}
 
 	return nil

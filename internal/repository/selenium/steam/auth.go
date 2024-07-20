@@ -56,12 +56,26 @@ func (r *steam) Login(wd selenium.WebDriver, user entity.SteamUser) (string, err
 		return "", steam_helper.Trace(err, wd)
 	}
 
-	_, err = steam_helper.MoveMouseAndClick(wd, loginBtn, end)
+	end, err = steam_helper.MoveMouseAndClick(wd, loginBtn, end)
 	if err != nil {
 		return "", steam_helper.Trace(err, wd)
 	}
 
 	steam_helper.SleepRandom(6000, 8000)
+
+	errAuth, err := wd.FindElement(selenium.ByCSSSelector, ".DjSvCZoKKfoNSmarsEcTS._25eT23F0cV5lmT3tXAIA56")
+	if err == nil {
+		end, err = steam_helper.MoveMouseAndClick(wd, errAuth, end)
+		if err != nil {
+			return "", steam_helper.Trace(err, wd)
+		}
+
+		steam_helper.SleepRandom(6000, 8000)
+
+		if _, err := steam_helper.MoveMouseAndClick(wd, loginBtn, end); err != nil {
+			return "", steam_helper.Trace(err, wd)
+		}
+	}
 
 	link, err := wd.CurrentURL()
 	if err != nil {

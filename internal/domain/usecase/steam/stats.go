@@ -16,14 +16,23 @@ func (s *steam) GetHistoryItems(game string, start, stop int) {
 func (s *steam) CheckTradeItems(game string, start, stop int) error {
 	ch := make(steam_helper.CursorCh[entity.CheckItem])
 
-	hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
+	links, err := s.db.GetHelpersForSteamTrade(start, stop)
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
 
-	links, err := s.db.GetLinkSteamItems(hashNames, game)
-	if err != nil {
-		return steam_helper.Trace(err)
+	if len(links) < start/4 {
+		hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
+		if err != nil {
+			return steam_helper.Trace(err)
+		}
+
+		l, err := s.db.GetLinkSteamItems(hashNames, game)
+		if err != nil {
+			return steam_helper.Trace(err)
+		}
+
+		links = append(links, l...)
 	}
 
 	go s.r.CheckTradeItems(links, ch)
@@ -57,12 +66,7 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 
 			profit := ((minSell - maxBuy) / maxBuy) * 100
 
-			fmt.Println("-------------------------------------------")
-			fmt.Println("hashName", item.Model.HashName)
-			fmt.Println("profit", profit)
-			fmt.Println("-------------------------------------------")
-
-			if profit > 1.5 { // если процент прибыли больше 1.5%
+			if profit > 2 { // если процент прибыли больше 2%
 				history, err := s.db.GetSteamSellHistory(item.Model.HashName, game, 2)
 				if err != nil {
 					return steam_helper.Trace(err)
@@ -72,7 +76,7 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 					historyUrl := fmt.Sprintf("https://steamcommunity.com/market/pricehistory/?appid=%s&market_hash_name=%s",
 						s.getAppId(game), item.Model.HashName)
 
-					history, err := s.r.GetHistoryItem(historyUrl)
+					history, err = s.r.GetHistoryItem(historyUrl)
 					if err != nil {
 						return steam_helper.Trace(err)
 					}
@@ -86,22 +90,24 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 					}
 				}
 
-				var sellsCount int
+				var sortHistory []entity.SteamSellHistory
 
 				for _, value := range history { // считает колво продаж за последние 2 дня
 					if time.Since(value.Price.DateTime) <= time.Hour*25*2 {
-						sellsCount += value.Price.Count
+						sortHistory = append(sortHistory, value)
 					}
 				}
 
-				if sellsCount > 80 { //если продаж больше 30
+				
+
+				if len(sortHistory) > 80 { //если продаж больше 80
 					if err := s.db.CreateForSteamTrade(item.Model.HashName, profit); err != nil {
 						return steam_helper.Trace(err)
 					}
 				}
 			}
 
-		case <-time.After(time.Minute * 3):
+		case <-time.After(time.Minute * 4):
 			return steam_helper.Trace(fmt.Errorf("timeout"))
 		}
 	}

@@ -5,7 +5,6 @@ import (
 	usecasedmarket "bot/internal/domain/usecase/dmarket"
 	usecasehelpers "bot/internal/domain/usecase/helpers"
 	usecasesteam "bot/internal/domain/usecase/steam"
-	"sync"
 
 	"github.com/Newmio/steam_helper"
 )
@@ -26,19 +25,14 @@ type useCase struct {
 }
 
 func NewUseCase(steam usecasesteam.ISteam, dmarket usecasedmarket.IDmarket, helpers usecasehelpers.IHelpers, bot entity.Bot) IUseCase {
-	bot.Wg = new(sync.WaitGroup)
 	return &useCase{bot: bot, steam: steam, dmarket: dmarket, helpers: helpers}
 }
 
-func (s *useCase) GetLinksForTradeItem(game string) error{
+func (s *useCase) GetLinksForTradeItem(game string) error {
 	return s.helpers.GetLinksForTradeItem(game)
 }
 
 func (s *useCase) CheckTradeItems(game string, start, stop int) error {
-	s.bot.Wg.Wait()
-	s.bot.Wg.Add(1)
-	defer s.bot.Wg.Done()
-
 	return s.steam.CheckTradeItems(game, start, stop)
 }
 
@@ -46,10 +40,6 @@ func (s *useCase) SynchItems(game string) error {
 	if !s.bot.Synch {
 		return nil
 	}
-	
-	s.bot.Wg.Wait()
-	s.bot.Wg.Add(1)
-	defer s.bot.Wg.Done()
 
 	ch := make(steam_helper.CursorCh[[]entity.SteamItem])
 	info := entity.PaginationInfo[[]entity.SteamItem]{
@@ -63,10 +53,6 @@ func (s *useCase) SynchItems(game string) error {
 }
 
 func (s *useCase) SteamAuth() error {
-	s.bot.Wg.Wait()
-	s.bot.Wg.Add(1)
-	defer s.bot.Wg.Done()
-
 	return s.steam.SteamAuth()
 }
 

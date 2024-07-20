@@ -51,7 +51,7 @@ func Init() {
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
 	steamUsecase := usecasesteam.NewSteam(seleniumRepo, dbRepo, botConfig.Markets["steam"])
 	dmarketUsecase := usecasedmarket.NewDmarket(seleniumRepo, dbRepo)
-	helpersUsecase := usecasehelpers.NewHelpers(seleniumRepo)
+	helpersUsecase := usecasehelpers.NewHelpers(seleniumRepo, dbRepo)
 	usecase := usecase.NewUseCase(steamUsecase, dmarketUsecase, helpersUsecase, botConfig.Bot)
 	authHandler := http.NewHandler(usecase)
 	authHandler.InitRoutes(e)

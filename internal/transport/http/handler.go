@@ -33,6 +33,14 @@ func (h *handler) InitRoutes(e *echo.Echo) {
 			items.GET("/steam", h.checkTradeItems)
 		}
 	}
+
+	helpers := e.Group("/helpers")
+	{
+		trade := helpers.Group("/trade")
+		{
+			trade.GET("/steam", h.getLinksForTradeItem)
+		}
+	}
 }
 
 func (h *handler) test(c echo.Context) error {

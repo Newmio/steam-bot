@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"sync"
 	"time"
 
 	"github.com/Newmio/steam_helper"
@@ -20,7 +19,6 @@ type Bot struct {
 	Synch       bool      `json:"synch"`
 	SynchStart  int       `json:"synch_start"`
 	SynchStop   int       `json:"synch_stop"`
-	Wg          *sync.WaitGroup
 }
 
 type Market struct {

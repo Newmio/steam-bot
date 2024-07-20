@@ -14,6 +14,8 @@ type IRedis interface {
 	CreateSteamSellHistory(history []entity.SteamSellHistory, game string) error
 	GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error)
 	CreateForSteamTrade(hashName string, profit float64) error
+	CreateHelpersForSteamTrade(links map[string]float64) error
+	GetHelpersForSteamTrade(start, stop int) ([]string, error)
 }
 
 type redisRepo struct {

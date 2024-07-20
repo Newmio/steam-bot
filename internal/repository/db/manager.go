@@ -19,6 +19,8 @@ type IDatabase interface {
 	// если lastDay = 0 - то выдать все
 	GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error)
 	CreateForSteamTrade(hashName string, profit float64) error
+	CreateHelpersForSteamTrade(links map[string]float64) error
+	GetHelpersForSteamTrade(start, stop int) ([]string, error)
 }
 
 type database struct {
@@ -30,7 +32,15 @@ func NewDatabase(redis reporedis.IRedis, sqlite reposqlite.ISqlite) IDatabase {
 	return &database{redis: redis, sqlite: sqlite}
 }
 
-func (db database) CreateForSteamTrade(hashName string, profit float64) error {
+func (db *database) GetHelpersForSteamTrade(start, stop int) ([]string, error){
+	return db.redis.GetHelpersForSteamTrade(start, stop)
+}
+
+func (db *database) CreateHelpersForSteamTrade(links map[string]float64) error{
+	return db.redis.CreateHelpersForSteamTrade(links)
+}
+
+func (db *database) CreateForSteamTrade(hashName string, profit float64) error {
 	return db.redis.CreateForSteamTrade(hashName, profit)
 }
 
@@ -45,6 +55,10 @@ func (db *database) CreateSteamSellHistory(history []entity.SteamSellHistory, ga
 		if time.Since(history[iH].Price.DateTime) <= time.Hour*24*365 {
 			newHist = append(newHist, history[iH])
 		}
+	}
+
+	if len(newHist) == 0 {
+		return nil
 	}
 
 	return db.redis.CreateSteamSellHistory(newHist, game)

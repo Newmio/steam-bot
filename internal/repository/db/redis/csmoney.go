@@ -4,22 +4,30 @@ import (
 	"bot/internal/domain/entity"
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Newmio/steam_helper"
 )
 
-func (db *redisRepo) CreateSeleniumCsmoneySkins(skins []entity.SteamItem) error {
-	for _, value := range skins {
+func (db *redisRepo) CreateItemsRareFloat(items map[string][]entity.FloatItem, game string) error {
+	pipe := db.db.TxPipeline()
 
-		body, err := json.Marshal(value)
-		if err != nil {
-			return steam_helper.Trace(err, value)
-		}
+	for key, values := range items {
 
-		err = db.db.RPush(context.Background(), "selenium_csmoney_items", string(body)).Err()
-		if err != nil {
-			return steam_helper.Trace(err)
+		for _, value := range values {
+			body, err := json.Marshal(value)
+			if err != nil {
+				return steam_helper.Trace(err)
+			}
+
+			if err := pipe.RPush(context.Background(), fmt.Sprintf("rare_float_%s_items:%s", game, key), body).Err(); err != nil {
+				return steam_helper.Trace(err)
+			}
 		}
+	}
+
+	if _, err := pipe.Exec(context.Background()); err != nil {
+		return steam_helper.Trace(err)
 	}
 
 	return nil

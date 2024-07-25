@@ -25,6 +25,7 @@ type ISelenium interface {
 	GetHistoryItems(links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory])
 	GetHistoryItem(link string) ([]entity.SteamSellHistory, error)
 	GetLinksForTradeItem(game string) (map[string]float64, error)
+	GetRareFloats(limit, offset int) (map[string][]entity.FloatItem, error)
 }
 
 type seleniumRepo struct {
@@ -44,13 +45,17 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 
 	return &seleniumRepo{
 		helpers: repohelpers.NewHelpers(),
-		csmoney: repocsmoney.NewCsmoney(),
+		csmoney: repocsmoney.NewCsmoney(user.Proxy),
 		dmarket: repodmarket.NewDmarket(),
 		steam:   reposteam.NewSteam(),
 		user:    user,
 		wd:      make(map[string]selenium.WebDriver),
 		wg:      make(map[string]*sync.WaitGroup),
 	}
+}
+
+func (r *seleniumRepo) GetRareFloats(limit, offset int) (map[string][]entity.FloatItem, error){
+	return r.csmoney.GetRareFloats(limit, offset)
 }
 
 func (r *seleniumRepo) GetLinksForTradeItem(game string) (map[string]float64, error) {
@@ -150,7 +155,7 @@ func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
 		r.wg[name] = new(sync.WaitGroup)
 		r.mu.Unlock()
 
-		if _, err := r.steam.Login(wd, r.user); err != nil{
+		if _, err := r.steam.Login(wd, r.user); err != nil {
 			return nil, steam_helper.Trace(err)
 		}
 	}

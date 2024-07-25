@@ -3,7 +3,7 @@ module bot
 go 1.22
 
 require (
-	github.com/Newmio/steam_helper v1.3.4
+	github.com/Newmio/steam_helper v1.3.6
 	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/labstack/echo/v4 v4.12.0

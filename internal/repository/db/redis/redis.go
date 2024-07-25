@@ -16,6 +16,7 @@ type IRedis interface {
 	CreateForSteamTrade(hashName string, profit float64) error
 	CreateHelpersForSteamTrade(links map[string]float64) error
 	GetHelpersForSteamTrade(start, stop int) ([]string, error)
+	CreateItemsRareFloat(items map[string][]entity.FloatItem, game string) error
 }
 
 type redisRepo struct {

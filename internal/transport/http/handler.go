@@ -44,13 +44,7 @@ func (h *handler) InitRoutes(e *echo.Echo) {
 }
 
 func (h *handler) test(c echo.Context) error {
-	game := c.QueryParam("game")
-
-	if game == "" || len([]rune(game)) <= 3 {
-		return c.JSON(400, steam_helper.Trace(fmt.Errorf("game is empty")).Error())
-	}
-
-	if err := h.s.GetLinksForTradeItem(game); err != nil {
+	if err := h.s.GetRareFloats(60, 0, "csgo"); err != nil {
 		return c.JSON(500, steam_helper.Trace(err).Error())
 	}
 

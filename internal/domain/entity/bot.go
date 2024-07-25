@@ -72,7 +72,7 @@ type tradeOffer struct {
 	Count     int `json:"count"`
 }
 
-type proxy struct {
+type Proxy struct {
 	Ip       string `json:"ip"`
 	Port     string `json:"port"`
 	Login    string `json:"login"`
@@ -86,5 +86,5 @@ type SteamUser struct {
 	ProfileLink string  `json:"profile_link"`
 	Login       string  `json:"login"`
 	Password    string  `json:"password"`
-	Proxy       []proxy `json:"proxy"`
+	Proxy       []Proxy `json:"proxy"`
 }

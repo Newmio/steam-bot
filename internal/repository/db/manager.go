@@ -21,6 +21,7 @@ type IDatabase interface {
 	CreateForSteamTrade(hashName string, profit float64) error
 	CreateHelpersForSteamTrade(links map[string]float64) error
 	GetHelpersForSteamTrade(start, stop int) ([]string, error)
+	CreateItemsRareFloat(items map[string][]entity.FloatItem, game string) error
 }
 
 type database struct {
@@ -32,11 +33,15 @@ func NewDatabase(redis reporedis.IRedis, sqlite reposqlite.ISqlite) IDatabase {
 	return &database{redis: redis, sqlite: sqlite}
 }
 
-func (db *database) GetHelpersForSteamTrade(start, stop int) ([]string, error){
+func (db *database) CreateItemsRareFloat(items map[string][]entity.FloatItem, game string) error {
+	return db.redis.CreateItemsRareFloat(items, game)
+}
+
+func (db *database) GetHelpersForSteamTrade(start, stop int) ([]string, error) {
 	return db.redis.GetHelpersForSteamTrade(start, stop)
 }
 
-func (db *database) CreateHelpersForSteamTrade(links map[string]float64) error{
+func (db *database) CreateHelpersForSteamTrade(links map[string]float64) error {
 	return db.redis.CreateHelpersForSteamTrade(links)
 }
 

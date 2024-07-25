@@ -10,7 +10,7 @@ type ISteam interface {
 	SteamAuth() error
 	SynchItems(info entity.PaginationInfo[[]entity.SteamItem]) error
 	Ping(url string) (string, error)
-	CheckTradeItems(game string, start, stop int) error
+	CheckItems(game string, start, stop int) error
 }
 
 type steam struct {

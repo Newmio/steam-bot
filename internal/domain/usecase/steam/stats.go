@@ -13,15 +13,13 @@ func (s *steam) GetHistoryItems(game string, start, stop int) {
 
 }
 
-func (s *steam) CheckTradeItems(game string, start, stop int) error {
-	ch := make(steam_helper.CursorCh[entity.CheckItem])
-
+func (s *steam) CheckItems(game string, start, stop int) error {
 	links, err := s.db.GetHelpersForSteamTrade(start, stop)
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
 
-	if len(links) < start/4 {
+	if len(links) < (stop-start)/4 {
 		hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
 		if err != nil {
 			return steam_helper.Trace(err)
@@ -35,12 +33,19 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 		links = append(links, l...)
 	}
 
-	go s.r.CheckTradeItems(links, ch)
+	info := entity.PaginationInfo[entity.CheckItem]{
+		Game:       game,
+		Links:      links,
+		CommonInfo: game == "csgo",
+		Ch:         make(steam_helper.CursorCh[entity.CheckItem]),
+	}
+
+	go s.r.CheckItems(info)
 
 	for {
 		select {
 
-		case item, ok := <-ch:
+		case item, ok := <-info.Ch:
 			if !ok {
 				return nil
 			}
@@ -97,8 +102,6 @@ func (s *steam) CheckTradeItems(game string, start, stop int) error {
 						sortHistory = append(sortHistory, value)
 					}
 				}
-
-				
 
 				if len(sortHistory) > 80 { //если продаж больше 80
 					if err := s.db.CreateForSteamTrade(item.Model.HashName, profit); err != nil {

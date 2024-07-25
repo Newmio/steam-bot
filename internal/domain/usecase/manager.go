@@ -14,7 +14,7 @@ type IUseCase interface {
 	SteamAuth() error
 	SynchItems(game string) error
 	Ping(url string) (string, error)
-	CheckTradeItems(game string, start, stop int) error
+	CheckItems(game string, start, stop int) error
 	GetLinksForTradeItem(game string) error
 	GetRareFloats(limit, offset int, game string) error
 }
@@ -39,8 +39,8 @@ func (s *useCase) GetLinksForTradeItem(game string) error {
 	return s.helpers.GetLinksForTradeItem(game)
 }
 
-func (s *useCase) CheckTradeItems(game string, start, stop int) error {
-	return s.steam.CheckTradeItems(game, start, stop)
+func (s *useCase) CheckItems(game string, start, stop int) error {
+	return s.steam.CheckItems(game, start, stop)
 }
 
 func (s *useCase) SynchItems(game string) error {

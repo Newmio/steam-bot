@@ -18,14 +18,14 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory]) {
+func (r *steam) GetHistoryItems(wd selenium.WebDriver, info entity.PaginationInfo[[]entity.SteamSellHistory]) {
 	var resp map[string]interface{}
 	var restartCount int
 
-	for _, link := range links {
+	for _, link := range info.Links {
 	start:
 		if err := wd.Get(link); err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 			return
 		}
 
@@ -33,24 +33,24 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 
 		pre, err := wd.FindElement(selenium.ByTagName, "pre")
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 			return
 		}
 
 		body, err := pre.Text()
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, pre))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err, pre))
 			return
 		}
 
 		if err := json.Unmarshal([]byte(body), &resp); err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, body))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err, body))
 			return
 		}
 
 		if len(resp) == 0 {
 			if _, err := r.ifTooManyRequests(wd); err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 			restartCount++
@@ -79,7 +79,7 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 
 			dateTime, err := time.Parse("Jan 02 2006 15:04", strings.Replace(value2[0].(string), " +0", "00", -1))
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 
@@ -87,7 +87,7 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 
 			count, err := strconv.Atoi(fmt.Sprint(value2[2].(string)))
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 
@@ -101,21 +101,21 @@ func (r *steam) GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_
 			})
 		}
 
-		ch.WriteModel(context.Background(), history)
+		info.Ch.WriteModel(context.Background(), history)
 		restartCount = 0
 	}
-	close(ch)
+	close(info.Ch)
 }
 
-func (r *steam) CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
+func (r *steam) CheckItems(wd selenium.WebDriver, info entity.PaginationInfo[entity.CheckItem]) {
 	var checkedBadLinks bool
 	var badLinks []string
 
 start:
-	for _, link := range links {
+	for _, link := range info.Links {
 
 		if err := wd.Get(link); err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 			return
 		}
 
@@ -123,14 +123,14 @@ start:
 
 		tables, err := wd.FindElements(selenium.ByCSSSelector, ".market_commodity_orders_table_container")
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err, wd))
 			return
 		}
 
 		if len(tables) == 0 {
 			flag, err := r.ifTooManyRequests(wd)
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 
@@ -140,60 +140,72 @@ start:
 			continue
 		}
 
+		var floats []entity.FloatItem
 		var sell, buy map[int]int
 
 		if len(tables) == 2 {
 			sell, err = r.findInItemTable(tables[0])
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 
 			buy, err = r.findInItemTable(tables[1])
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 
 		} else {
-			sell, err = r.ifNotCommodity(wd)
+			var checkFloat bool
+
+			if info.CommonInfo != nil {
+				checkFloat = info.CommonInfo.(bool)
+			}
+
+			sell, floats, err = r.ifNotCommodity(wd, checkFloat)
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 
 			buy, err = r.findInItemTable(tables[0])
 			if err != nil {
-				ch.WriteError(context.Background(), steam_helper.Trace(err))
+				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 		}
 
 		link, err := wd.CurrentURL()
 		if err != nil {
-			ch.WriteError(context.Background(), steam_helper.Trace(err))
+			info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 			return
 		}
 
 		hashName := strings.Split(link, "/")
 
+		for i := range floats {
+			floats[i].HashName = hashName[len(hashName)-1]
+		}
+
 		checkItem := entity.CheckItem{
 			HashName: hashName[len(hashName)-1],
+			Floats:   floats,
 			Sell:     sell,
 			Buy:      buy,
 		}
 
-		ch.WriteModel(context.Background(), checkItem)
+		info.Ch.WriteModel(context.Background(), checkItem)
 
 		steam_helper.SleepRandom(1000, 2000)
 	}
 
 	if len(badLinks) > 0 && !checkedBadLinks {
 		checkedBadLinks = true
-		links = badLinks
+		info.Links = badLinks
 		goto start
 	}
-	close(ch)
+	close(info.Ch)
 }
 
 func (r *steam) findInItemTable(table selenium.WebElement) (map[int]int, error) {
@@ -257,59 +269,123 @@ restartSearch:
 	return buy, nil
 }
 
-func (r *steam) ifNotCommodity(wd selenium.WebDriver) (map[int]int, error) {
+func (r *steam) ifNotCommodity(wd selenium.WebDriver, checkFloat bool) (map[int]int, []entity.FloatItem, error) {
+	var checkFloatCount int
+	var floats []entity.FloatItem
+	sell := make(map[int]int)
+	re := regexp.MustCompile(`<!--\?lit\$[0-9]+\$-->\s*([0-9]+\.[0-9]+)\s*<!--\?lit\$[0-9]+\$-->`)
+
+	start, err := steam_helper.GetStartMousePosition(wd)
+	if err != nil {
+		return nil, nil, steam_helper.Trace(err)
+	}
+
+restart:
+
 	element, err := wd.FindElement(selenium.ByCSSSelector, ".market_content_block.market_home_listing_table.market_home_main_listing_table.market_listing_table")
 	if err != nil {
-		return nil, steam_helper.Trace(err, wd)
+		return nil, nil, steam_helper.Trace(err, wd)
 	}
 
 	rows, err := element.FindElement(selenium.ByID, "searchResultsRows")
 	if err != nil {
-		return nil, steam_helper.Trace(err, element)
+		return nil, nil, steam_helper.Trace(err, element)
 	}
 
 	items, err := rows.FindElements(selenium.ByCSSSelector, ".market_listing_row.market_recent_listing_row")
 	if err != nil {
-		return nil, steam_helper.Trace(err, rows)
+		return nil, nil, steam_helper.Trace(err, rows)
 	}
 
-	var costItemsSell []string
-	for _, item := range items {
+	type itInfo struct {
+		costStr string
+		float   float64
+	}
+
+	itemInfo := make(map[int]itInfo)
+
+	for i, item := range items {
 
 		costElement, err := item.FindElement(selenium.ByCSSSelector, ".market_listing_price.market_listing_price_with_fee")
 		if err != nil {
-			return nil, steam_helper.Trace(err, item)
+			return nil, nil, steam_helper.Trace(err, item)
 		}
 
 		costStr, err := costElement.Text()
 		if err != nil {
-			return nil, steam_helper.Trace(err, costElement)
+			return nil, nil, steam_helper.Trace(err, costElement)
 		}
 
-		costItemsSell = append(costItemsSell, costStr)
+		var f float64
+		if checkFloat {
+			floatElement, err := item.FindElement(selenium.ByID, "float-row-wrapper")
+			if err != nil {
+				return nil, nil, steam_helper.Trace(err, item)
+			}
+
+			floatText, err := floatElement.Text()
+			if err != nil {
+				return nil, nil, steam_helper.Trace(err, floatElement)
+			}
+
+			f, err = strconv.ParseFloat(re.FindStringSubmatch(floatText)[1], 64)
+			if err != nil {
+				return nil, nil, steam_helper.Trace(err)
+			}
+		}
+
+		itemInfo[i] = itInfo{
+			costStr: costStr,
+			float:   f,
+		}
 	}
 
-	re := regexp.MustCompile("[^0-9]")
-	sell := make(map[int]int)
+	re = regexp.MustCompile("[^0-9]")
 
-	for _, cost := range costItemsSell {
-		costClear := re.ReplaceAllString(cost, "")
+	for _, cost := range itemInfo {
+		var c int
+
+		costClear := re.ReplaceAllString(cost.costStr, "")
 
 		if costClear != "" {
 			costInt, err := strconv.Atoi(costClear)
 			if err != nil {
-				return nil, steam_helper.Trace(err)
+				return nil, nil, steam_helper.Trace(err)
 			}
 
-			if strings.Contains(cost, ",") || strings.Contains(cost, ".") {
-				sell[costInt]++
+			if strings.Contains(cost.costStr, ",") || strings.Contains(cost.costStr, ".") {
+				c = costInt
+				sell[c]++
 			} else {
-				sell[costInt*100]++
+				c = costInt * 100
+				sell[c]++
 			}
+		}
+
+		if checkFloat {
+			floats = append(floats, entity.FloatItem{
+				Cost:  c,
+				Float: cost.float,
+			})
 		}
 	}
 
-	return sell, nil
+	if checkFloat {
+		next, err := wd.FindElement(selenium.ByID, "searchResults_btn_next")
+		if err != nil {
+			return nil, nil, steam_helper.Trace(err, wd)
+		}
+
+		start, err = steam_helper.MoveMouseAndClick(wd, next, start)
+		if err != nil {
+			return nil, nil, steam_helper.Trace(err, next)
+		}
+
+		checkFloatCount++
+		goto restart
+	}
+
+	return sell, floats, nil
 }
 
 func (r *steam) SynchItems(wd selenium.WebDriver, info entity.PaginationInfo[[]entity.SteamItem]) {

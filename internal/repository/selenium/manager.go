@@ -21,8 +21,8 @@ type ISelenium interface {
 	SteamLogin() error
 	SynchItems(info entity.PaginationInfo[[]entity.SteamItem])
 	Ping(url string) (string, error)
-	CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem])
-	GetHistoryItems(links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory])
+	CheckItems(info entity.PaginationInfo[entity.CheckItem])
+	GetHistoryItems(info entity.PaginationInfo[[]entity.SteamSellHistory])
 	GetHistoryItem(link string) ([]entity.SteamSellHistory, error)
 	GetLinksForTradeItem(game string) (map[string]float64, error)
 	GetRareFloats(limit, offset int) (map[string][]entity.FloatItem, error)
@@ -54,7 +54,7 @@ func NewSelenium(user entity.SteamUser) ISelenium {
 	}
 }
 
-func (r *seleniumRepo) GetRareFloats(limit, offset int) (map[string][]entity.FloatItem, error){
+func (r *seleniumRepo) GetRareFloats(limit, offset int) (map[string][]entity.FloatItem, error) {
 	return r.csmoney.GetRareFloats(limit, offset)
 }
 
@@ -69,7 +69,10 @@ func (r *seleniumRepo) GetLinksForTradeItem(game string) (map[string]float64, er
 }
 
 func (r *seleniumRepo) GetHistoryItem(link string) ([]entity.SteamSellHistory, error) {
-	ch := make(steam_helper.CursorCh[[]entity.SteamSellHistory])
+	info := entity.PaginationInfo[[]entity.SteamSellHistory]{
+		Links: []string{link},
+		Ch:    make(steam_helper.CursorCh[[]entity.SteamSellHistory]),
+	}
 
 	wd, err := r.getDriver("helpers")
 	if err != nil {
@@ -77,10 +80,10 @@ func (r *seleniumRepo) GetHistoryItem(link string) ([]entity.SteamSellHistory, e
 	}
 	defer r.wg["helpers"].Done()
 
-	go r.steam.GetHistoryItems(wd, []string{link}, ch)
+	go r.steam.GetHistoryItems(wd, info)
 
 	select {
-	case history, ok := <-ch:
+	case history, ok := <-info.Ch:
 		if !ok {
 			return nil, nil
 		}
@@ -95,26 +98,26 @@ func (r *seleniumRepo) GetHistoryItem(link string) ([]entity.SteamSellHistory, e
 	}
 }
 
-func (r *seleniumRepo) GetHistoryItems(links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory]) {
+func (r *seleniumRepo) GetHistoryItems(info entity.PaginationInfo[[]entity.SteamSellHistory]) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
-		ch.WriteError(context.Background(), steam_helper.Trace(err))
+		info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 		return
 	}
 	defer r.wg["steam"].Done()
 
-	r.steam.GetHistoryItems(wd, links, ch)
+	r.steam.GetHistoryItems(wd, info)
 }
 
-func (r *seleniumRepo) CheckTradeItems(links []string, ch steam_helper.CursorCh[entity.CheckItem]) {
+func (r *seleniumRepo) CheckItems(info entity.PaginationInfo[entity.CheckItem]) {
 	wd, err := r.getDriver("steam")
 	if err != nil {
-		ch.WriteError(context.Background(), steam_helper.Trace(err))
+		info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 		return
 	}
 	defer r.wg["steam"].Done()
 
-	r.steam.CheckTradeItems(wd, links, ch)
+	r.steam.CheckItems(wd, info)
 }
 
 func (r *seleniumRepo) SynchItems(info entity.PaginationInfo[[]entity.SteamItem]) {

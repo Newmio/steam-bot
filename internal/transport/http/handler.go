@@ -30,7 +30,7 @@ func (h *handler) InitRoutes(e *echo.Echo) {
 	{
 		items := check.Group("/items")
 		{
-			items.GET("/steam", h.checkTradeItems)
+			items.GET("/steam", h.checkItems)
 		}
 	}
 

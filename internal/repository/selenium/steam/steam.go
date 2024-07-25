@@ -11,8 +11,8 @@ import (
 type ISteam interface {
 	Login(wd selenium.WebDriver, user entity.SteamUser) (string, error)
 	SynchItems(wd selenium.WebDriver, info entity.PaginationInfo[[]entity.SteamItem])
-	CheckTradeItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[entity.CheckItem])
-	GetHistoryItems(wd selenium.WebDriver, links []string, ch steam_helper.CursorCh[[]entity.SteamSellHistory])
+	CheckItems(wd selenium.WebDriver, info entity.PaginationInfo[entity.CheckItem])
+	GetHistoryItems(wd selenium.WebDriver, info entity.PaginationInfo[[]entity.SteamSellHistory])
 }
 
 type steam struct{}

@@ -282,6 +282,10 @@ func (r *steam) ifNotCommodity(wd selenium.WebDriver, checkFloat bool) (map[int]
 
 restart:
 
+	if checkFloatCount > 10 {
+		return sell, floats, nil
+	}
+
 	element, err := wd.FindElement(selenium.ByCSSSelector, ".market_content_block.market_home_listing_table.market_home_main_listing_table.market_listing_table")
 	if err != nil {
 		return nil, nil, steam_helper.Trace(err, wd)
@@ -382,6 +386,7 @@ restart:
 		}
 
 		checkFloatCount++
+		steam_helper.SleepRandom(400, 500)
 		goto restart
 	}
 

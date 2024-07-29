@@ -163,13 +163,13 @@ start:
 				checkFloat = info.CommonInfo.(bool)
 			}
 
-			sell, floats, err = r.ifNotCommodity(wd, checkFloat)
+			buy, err = r.findInItemTable(tables[0])
 			if err != nil {
 				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
 			}
 
-			buy, err = r.findInItemTable(tables[0])
+			sell, floats, err = r.ifNotCommodity(wd, checkFloat)
 			if err != nil {
 				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
@@ -322,19 +322,44 @@ restart:
 
 		var f float64
 		if checkFloat {
-			floatElement, err := item.FindElement(selenium.ByID, "float-row-wrapper")
+
+			floatBlock, err := item.FindElement(selenium.ByTagName, "csfloat-item-row-wrapper")
 			if err != nil {
 				return nil, nil, steam_helper.Trace(err, item)
 			}
 
-			floatText, err := floatElement.Text()
+			start, err = steam_helper.MoveMouseAndClick(wd, floatBlock, start)
 			if err != nil {
-				return nil, nil, steam_helper.Trace(err, floatElement)
+				return nil, nil, steam_helper.Trace(err, item)
 			}
 
-			f, err = strconv.ParseFloat(re.FindStringSubmatch(floatText)[1], 64)
+			html, err := item.GetAttribute("outerHTML")
 			if err != nil {
-				return nil, nil, steam_helper.Trace(err)
+				return nil, nil, steam_helper.Trace(err, item)
+			}
+
+			fmt.Println(html)
+
+			time.Sleep(2 * time.Hour)
+
+			floatElement, err := floatBlock.FindElement(selenium.ByTagName, "div")
+			if err != nil {
+				if !strings.Contains(err.Error(), "no such element") {
+					return nil, nil, steam_helper.Trace(err, item)
+				}
+
+				fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+			} else {
+				floatText, err := floatElement.Text()
+				if err != nil {
+					return nil, nil, steam_helper.Trace(err, floatElement)
+				}
+
+				f, err = strconv.ParseFloat(re.FindStringSubmatch(floatText)[1], 64)
+				if err != nil {
+					return nil, nil, steam_helper.Trace(err)
+				}
 			}
 		}
 
@@ -366,7 +391,7 @@ restart:
 			}
 		}
 
-		if checkFloat {
+		if checkFloat && cost.float > 0 {
 			floats = append(floats, entity.FloatItem{
 				Cost:  c,
 				Float: cost.float,
@@ -374,7 +399,7 @@ restart:
 		}
 	}
 
-	if checkFloat {
+	if checkFloat && len(floats) > 0 {
 		next, err := wd.FindElement(selenium.ByID, "searchResults_btn_next")
 		if err != nil {
 			return nil, nil, steam_helper.Trace(err, wd)

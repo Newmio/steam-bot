@@ -19,8 +19,8 @@ type IDatabase interface {
 	// если lastDay = 0 - то выдать все
 	GetSteamSellHistory(hashName, game string, lastDay int) ([]entity.SteamSellHistory, error)
 	CreateForSteamTrade(hashName string, profit float64) error
-	CreateHelpersForSteamTrade(links map[string]float64) error
-	GetHelpersForSteamTrade(start, stop int) ([]string, error)
+	CreateHelpersForSteamTrade(links map[string]float64, game string) error
+	GetHelpersForSteamTrade(start, stop int, game string) ([]string, error)
 	CreateItemsRareFloat(items map[string][]entity.FloatItem, game string) error
 }
 
@@ -37,12 +37,12 @@ func (db *database) CreateItemsRareFloat(items map[string][]entity.FloatItem, ga
 	return db.redis.CreateItemsRareFloat(items, game)
 }
 
-func (db *database) GetHelpersForSteamTrade(start, stop int) ([]string, error) {
-	return db.redis.GetHelpersForSteamTrade(start, stop)
+func (db *database) GetHelpersForSteamTrade(start, stop int, game string) ([]string, error) {
+	return db.redis.GetHelpersForSteamTrade(start, stop, game)
 }
 
-func (db *database) CreateHelpersForSteamTrade(links map[string]float64) error {
-	return db.redis.CreateHelpersForSteamTrade(links)
+func (db *database) CreateHelpersForSteamTrade(links map[string]float64, game string) error {
+	return db.redis.CreateHelpersForSteamTrade(links, game)
 }
 
 func (db *database) CreateForSteamTrade(hashName string, profit float64) error {

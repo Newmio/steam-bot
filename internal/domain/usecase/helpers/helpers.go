@@ -26,7 +26,7 @@ func (s *helpers) GetLinksForTradeItem(game string) error {
 		return steam_helper.Trace(err)
 	}
 
-	if err := s.db.CreateHelpersForSteamTrade(links); err != nil {
+	if err := s.db.CreateHelpersForSteamTrade(links, game); err != nil {
 		return steam_helper.Trace(err)
 	}
 

@@ -14,12 +14,12 @@ func (s *steam) GetHistoryItems(game string, start, stop int) {
 }
 
 func (s *steam) CheckItems(game string, start, stop int) error {
-	links, err := s.db.GetHelpersForSteamTrade(start, stop)
+	links, err := s.db.GetHelpersForSteamTrade(start, stop, game)
 	if err != nil {
 		return steam_helper.Trace(err)
 	}
 
-	if len(links) < (stop-start)/4 {
+	if len(links) < (stop-start)/3 {
 		hashNames, err := s.db.GetHashSteamItems(game, int64(start), int64(stop))
 		if err != nil {
 			return steam_helper.Trace(err)
@@ -52,6 +52,10 @@ func (s *steam) CheckItems(game string, start, stop int) error {
 			if item.Error != nil {
 				return steam_helper.Trace(item.Error)
 			}
+
+			fmt.Println("===========================================")
+			fmt.Printf("%+v\n", item.Model.Floats)
+			fmt.Println("===========================================")
 
 			maxBuy, minSell := 0.0, math.MaxFloat64
 

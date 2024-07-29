@@ -239,13 +239,12 @@ func createDriver() (selenium.WebDriver, error) {
 			"profile.default_content_setting_values.images":        0,
 			"profile.managed_default_content_settings.popups":      0,
 		},
-
-		//Extensions: []string{"proxyauth.zip"},
 	}
 
 	chromeCaps.AddExtension("proxy_auth_plugin.zip")
 	chromeCaps.AddExtension("delete_headers_plugin.zip")
 	//chromeCaps.AddExtension("JJICBEFPEMNPHINCCGIKPDAAGJEBBNHG_4_3_1_0.crx")
+	//chromeCaps.AddExtension("Steam-Inventory-Helper-Chrome.zip")
 
 	script := `
     // Функция для генерации случайного целого числа в заданном диапазоне

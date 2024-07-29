@@ -34,7 +34,7 @@ func (h *handler) InitRoutes(e *echo.Echo) {
 		}
 	}
 
-	helpers := e.Group("/helpers")
+	helpers := e.Group("/helper")
 	{
 		trade := helpers.Group("/trade")
 		{

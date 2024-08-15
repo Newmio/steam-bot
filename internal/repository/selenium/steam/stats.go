@@ -140,7 +140,7 @@ start:
 			continue
 		}
 
-		var floats []entity.FloatItem
+		var linksToGame []string
 		var sell, buy map[int]int
 
 		if len(tables) == 2 {
@@ -169,7 +169,7 @@ start:
 				return
 			}
 
-			sell, floats, err = r.ifNotCommodity(wd, checkFloat)
+			sell, linksToGame, err = r.ifNotCommodity(wd, checkFloat)
 			if err != nil {
 				info.Ch.WriteError(context.Background(), steam_helper.Trace(err))
 				return
@@ -184,13 +184,9 @@ start:
 
 		hashName := strings.Split(link, "/")
 
-		for i := range floats {
-			floats[i].HashName = hashName[len(hashName)-1]
-		}
-
 		checkItem := entity.CheckItem{
 			HashName: hashName[len(hashName)-1],
-			Floats:   floats,
+			LinksToGame: linksToGame,
 			Sell:     sell,
 			Buy:      buy,
 		}
@@ -218,10 +214,9 @@ restartSearch:
 		if !strings.Contains(err.Error(), steam_helper.ERROR_NO_SUCH_ELEMENT_IN_FRAME) {
 			return nil, steam_helper.Trace(err, table)
 		}
-		fmt.Println("restart")
 		goto restartSearch
 	}
-
+	
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		return nil, steam_helper.Trace(err, table)
@@ -269,11 +264,10 @@ restartSearch:
 	return buy, nil
 }
 
-func (r *steam) ifNotCommodity(wd selenium.WebDriver, checkFloat bool) (map[int]int, []entity.FloatItem, error) {
+func (r *steam) ifNotCommodity(wd selenium.WebDriver, checkFloat bool) (map[int]int, []string, error) {
 	var checkFloatCount int
-	var floats []entity.FloatItem
+	var linksToGame []string
 	sell := make(map[int]int)
-	re := regexp.MustCompile(`<!--\?lit\$[0-9]+\$-->\s*([0-9]+\.[0-9]+)\s*<!--\?lit\$[0-9]+\$-->`)
 
 	start, err := steam_helper.GetStartMousePosition(wd)
 	if err != nil {
@@ -283,12 +277,17 @@ func (r *steam) ifNotCommodity(wd selenium.WebDriver, checkFloat bool) (map[int]
 restart:
 
 	if checkFloatCount > 10 {
-		return sell, floats, nil
+		return sell, linksToGame, nil
 	}
 
 	element, err := wd.FindElement(selenium.ByCSSSelector, ".market_content_block.market_home_listing_table.market_home_main_listing_table.market_listing_table")
 	if err != nil {
 		return nil, nil, steam_helper.Trace(err, wd)
+	}
+
+	start, err = steam_helper.MoveMouseAndClick(wd, element, start)
+	if err != nil {
+		return nil, nil, steam_helper.Trace(err)
 	}
 
 	rows, err := element.FindElement(selenium.ByID, "searchResultsRows")
@@ -303,7 +302,6 @@ restart:
 
 	type itInfo struct {
 		costStr string
-		float   float64
 	}
 
 	itemInfo := make(map[int]itInfo)
@@ -320,56 +318,12 @@ restart:
 			return nil, nil, steam_helper.Trace(err, costElement)
 		}
 
-		var f float64
-		if checkFloat {
-
-			floatBlock, err := item.FindElement(selenium.ByTagName, "csfloat-item-row-wrapper")
-			if err != nil {
-				return nil, nil, steam_helper.Trace(err, item)
-			}
-
-			start, err = steam_helper.MoveMouseAndClick(wd, floatBlock, start)
-			if err != nil {
-				return nil, nil, steam_helper.Trace(err, item)
-			}
-
-			html, err := item.GetAttribute("outerHTML")
-			if err != nil {
-				return nil, nil, steam_helper.Trace(err, item)
-			}
-
-			fmt.Println(html)
-
-			time.Sleep(2 * time.Hour)
-
-			floatElement, err := floatBlock.FindElement(selenium.ByTagName, "div")
-			if err != nil {
-				if !strings.Contains(err.Error(), "no such element") {
-					return nil, nil, steam_helper.Trace(err, item)
-				}
-
-				fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-			} else {
-				floatText, err := floatElement.Text()
-				if err != nil {
-					return nil, nil, steam_helper.Trace(err, floatElement)
-				}
-
-				f, err = strconv.ParseFloat(re.FindStringSubmatch(floatText)[1], 64)
-				if err != nil {
-					return nil, nil, steam_helper.Trace(err)
-				}
-			}
-		}
-
 		itemInfo[i] = itInfo{
 			costStr: costStr,
-			float:   f,
 		}
 	}
 
-	re = regexp.MustCompile("[^0-9]")
+	re := regexp.MustCompile("[^0-9]")
 
 	for _, cost := range itemInfo {
 		var c int
@@ -390,16 +344,9 @@ restart:
 				sell[c]++
 			}
 		}
-
-		if checkFloat && cost.float > 0 {
-			floats = append(floats, entity.FloatItem{
-				Cost:  c,
-				Float: cost.float,
-			})
-		}
 	}
 
-	if checkFloat && len(floats) > 0 {
+	if checkFloat {
 		next, err := wd.FindElement(selenium.ByID, "searchResults_btn_next")
 		if err != nil {
 			return nil, nil, steam_helper.Trace(err, wd)
@@ -415,7 +362,7 @@ restart:
 		goto restart
 	}
 
-	return sell, floats, nil
+	return sell, linksToGame, nil
 }
 
 func (r *steam) SynchItems(wd selenium.WebDriver, info entity.PaginationInfo[[]entity.SteamItem]) {

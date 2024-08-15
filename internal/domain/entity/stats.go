@@ -6,7 +6,7 @@ import (
 
 type CheckItem struct {
 	HashName string
-	Floats   []FloatItem
+	LinksToGame []string
 	Sell     map[int]int
 	Buy      map[int]int
 }

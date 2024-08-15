@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//go:generate mockery --name=IDatabase --output=./mocks --case=underscore
 type IDatabase interface {
 	CreateTables() error
 	CreateHashSteamItems(hashNames []string, game string) error

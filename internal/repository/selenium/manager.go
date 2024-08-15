@@ -17,6 +17,7 @@ import (
 	"github.com/tebeka/selenium/chrome"
 )
 
+//go:generate mockery --name=ISelenium --output=./mocks --case=underscore
 type ISelenium interface {
 	SteamLogin() error
 	SynchItems(info entity.PaginationInfo[[]entity.SteamItem])
@@ -39,13 +40,13 @@ type seleniumRepo struct {
 	mu      sync.Mutex
 }
 
-func NewSelenium(user entity.SteamUser) ISelenium {
+func NewSelenium(user entity.SteamUser, http steam_helper.ICustomHTTP) ISelenium {
 	steam_helper.BuzierOffset = 200
 	steam_helper.BuzierSteps = 30
 
 	return &seleniumRepo{
-		helpers: repohelpers.NewHelpers(),
-		csmoney: repocsmoney.NewCsmoney(user.Proxy),
+		helpers: repohelpers.NewHelpers(http),
+		csmoney: repocsmoney.NewCsmoney(http),
 		dmarket: repodmarket.NewDmarket(),
 		steam:   reposteam.NewSteam(),
 		user:    user,
@@ -169,10 +170,11 @@ func (r *seleniumRepo) getDriver(name string) (selenium.WebDriver, error) {
 }
 
 func (r *seleniumRepo) Ping(url string) (string, error) {
-	wd, err := r.getDriver("steam")
+	wd, err := createDriver()
 	if err != nil {
 		return "", steam_helper.Trace(err)
 	}
+	defer wd.Close()
 
 	// r.Test(wd)
 	// return "", nil
@@ -243,8 +245,7 @@ func createDriver() (selenium.WebDriver, error) {
 
 	chromeCaps.AddExtension("proxy_auth_plugin.zip")
 	chromeCaps.AddExtension("delete_headers_plugin.zip")
-	//chromeCaps.AddExtension("JJICBEFPEMNPHINCCGIKPDAAGJEBBNHG_4_3_1_0.crx")
-	//chromeCaps.AddExtension("Steam-Inventory-Helper-Chrome.zip")
+	chromeCaps.AddExtension("JJICBEFPEMNPHINCCGIKPDAAGJEBBNHG_4_3_1_0.crx")
 
 	script := `
     // Функция для генерации случайного целого числа в заданном диапазоне

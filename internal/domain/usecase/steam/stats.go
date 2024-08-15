@@ -53,10 +53,6 @@ func (s *steam) CheckItems(game string, start, stop int) error {
 				return steam_helper.Trace(item.Error)
 			}
 
-			fmt.Println("===========================================")
-			fmt.Printf("%+v\n", item.Model.Floats)
-			fmt.Println("===========================================")
-
 			maxBuy, minSell := 0.0, math.MaxFloat64
 
 			for cost := range item.Model.Buy {

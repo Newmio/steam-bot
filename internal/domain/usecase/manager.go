@@ -10,6 +10,7 @@ import (
 	"github.com/Newmio/steam_helper"
 )
 
+//go:generate mockery --name=IUseCase --output=./mocks --case=underscore
 type IUseCase interface {
 	SteamAuth() error
 	SynchItems(game string) error

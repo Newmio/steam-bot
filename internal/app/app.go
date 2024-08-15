@@ -16,10 +16,12 @@ import (
 	reposelenium "bot/internal/repository/selenium"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 
-	"bot/internal/transport/http"
+	httpCustom "bot/internal/transport/http"
 
+	"github.com/Newmio/steam_helper"
 	"github.com/labstack/echo/v4"
 )
 
@@ -46,7 +48,19 @@ func Init() {
 		panic(err)
 	}
 
-	seleniumRepo := reposelenium.NewSelenium(botConfig.Bot.SteamUser)
+	client := &http.Client{}
+	var httpProxy []steam_helper.ProxyConfig
+
+	for _, value := range botConfig.Bot.SteamUser.Proxy {
+		httpProxy = append(httpProxy, steam_helper.ProxyConfig{
+			Login: value.Login,
+			Pass:  value.Password,
+			IP:    value.Ip,
+			Port:  value.Port,
+		})
+	}
+
+	seleniumRepo := reposelenium.NewSelenium(botConfig.Bot.SteamUser, steam_helper.NewHttp(client, httpProxy))
 	repoRedis := reporedis.NewRedis(redis)
 	repoSqlite := reposqlite.NewSqlite(sqlite)
 	dbRepo := repodb.NewDatabase(repoRedis, repoSqlite)
@@ -55,7 +69,7 @@ func Init() {
 	csmoneyUsecase := usecasecsmoney.NewCsmoney(seleniumRepo, dbRepo)
 	helpersUsecase := usecasehelpers.NewHelpers(seleniumRepo, dbRepo)
 	usecase := usecase.NewUseCase(steamUsecase, dmarketUsecase, csmoneyUsecase, helpersUsecase, botConfig.Bot)
-	authHandler := http.NewHandler(usecase)
+	authHandler := httpCustom.NewHandler(usecase)
 	authHandler.InitRoutes(e)
 
 	e.Logger.Fatal(e.Start(":8088"))
